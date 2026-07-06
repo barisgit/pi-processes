@@ -29,6 +29,14 @@ export function registerPsCommand(
             manager,
           );
         },
+        {
+          overlay: true,
+          overlayOptions: {
+            anchor: "top-left",
+            width: "100%",
+            maxHeight: "100%",
+          },
+        },
       );
 
       if (result === undefined) {

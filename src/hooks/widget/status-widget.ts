@@ -53,9 +53,9 @@ export function renderStatusWidget(
     ...finished.sort((a, b) => (b.endTime ?? 0) - (a.endTime ?? 0)),
   ];
 
-  const prefix = theme.fg("dim", "processes: ");
+  const prefix = theme.fg("dim", "processes · ");
   const prefixLen = visibleWidth(prefix);
-  const separator = theme.fg("dim", " | ");
+  const separator = theme.fg("dim", " · ");
   const separatorLen = visibleWidth(separator);
   const effectiveMax = maxWidth ?? 200;
 

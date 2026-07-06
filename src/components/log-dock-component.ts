@@ -10,13 +10,8 @@ import type { Component } from "@earendil-works/pi-tui";
 import { truncateToWidth, visibleWidth } from "@earendil-works/pi-tui";
 import { LIVE_STATUSES } from "../constants";
 import type { ProcessManager } from "../manager";
-import { stripAnsi } from "../utils";
+import { formatRuntime, formatStatus, stripAnsi } from "../utils";
 import { LogFileViewer } from "./log-file-viewer";
-import {
-  createPanelPadder,
-  renderPanelRule,
-  renderPanelTitleLine,
-} from "./panel-helpers";
 
 const PROCESS_COLORS: ThemeColor[] = [
   "accent",
@@ -42,9 +37,7 @@ export function renderCollapsedDockLine(
   const lineWidth = getCollapsedDockLineWidth(width);
   if (lineWidth === 0) return "";
 
-  const innerWidth = Math.max(0, lineWidth - 2);
-  const line = truncateToWidth(content, innerWidth, "", true);
-  return ` ${line}${" ".repeat(Math.max(0, lineWidth - 1 - visibleWidth(line)))}`;
+  return truncateToWidth(content, lineWidth, "", true);
 }
 
 interface LogDockOptions {
@@ -138,52 +131,64 @@ export class LogDockComponent implements Component {
     const fg = (color: ThemeColor, s: string) => theme.fg(color, s);
 
     const processes = this.manager.list();
-    const lineWidth = getCollapsedDockLineWidth(width);
-    const padLine = (content: string) =>
-      renderCollapsedDockLine(content, width);
+    const line = (content: string) => renderCollapsedDockLine(content, width);
 
     if (processes.length === 0) {
-      return [renderPanelRule(lineWidth, theme), padLine(dim("No processes"))];
+      return [
+        line(` ${fg("accent", "Processes")}`),
+        line(dim("  No processes")),
+        "",
+      ];
     }
 
     const running = processes.filter((p) => LIVE_STATUSES.has(p.status));
     const finished = processes.filter((p) => !LIVE_STATUSES.has(p.status));
 
-    const parts: string[] = [];
-    for (const proc of running) {
+    const headerBase = running.length
+      ? `Processes · ${running.length} running`
+      : finished.length
+        ? `Processes · ${finished.length} finished`
+        : "Processes";
+    const headerSuffix =
+      running.length && finished.length ? ` · ${finished.length} finished` : "";
+    const lines = [line(` ${fg("accent", headerBase)}${dim(headerSuffix)}`)];
+
+    for (const proc of running.slice(0, 4)) {
       const color = this.getProcessColor(proc.id);
-      parts.push(`${fg(color, "●")} ${proc.name}`);
-    }
-    if (finished.length > 0) {
-      parts.push(dim(`+${finished.length} finished`));
+      lines.push(
+        line(
+          `  ${fg(color, "●")} ${proc.name} ${dim(
+            `· ${formatStatus(proc)} · ${formatRuntime(proc.startTime, proc.endTime)}`,
+          )}`,
+        ),
+      );
     }
 
-    const firstLine = parts.join(" | ");
-    const lines = [renderPanelRule(lineWidth, theme), padLine(firstLine)];
+    if (running.length > 4) {
+      lines.push(line(dim(`  +${running.length - 4} more`)));
+    }
 
     if (running.length > 0) {
       const lastLogs = this.manager.getCombinedOutput(running[0].id, 1);
       if (lastLogs && lastLogs.length > 0) {
         const lastLog = stripAnsi(lastLogs[lastLogs.length - 1].text);
-        lines.push(padLine(dim(lastLog)));
+        lines.splice(2, 0, line(dim(`    ${lastLog}`)));
       }
     }
 
-    return lines;
+    return [...lines, ""];
   }
 
   private renderOpen(width: number): string[] {
     const theme = this.theme;
     const dim = (s: string) => theme.fg("dim", s);
+    const fg = (color: ThemeColor, s: string) => theme.fg(color, s);
 
-    const innerWidth = width - 2;
-    const basePadLine = createPanelPadder(width);
-    const padLine = (content: string): string =>
-      basePadLine(
-        visibleWidth(content) > innerWidth
-          ? truncateToWidth(content, innerWidth, "", true)
-          : content,
-      );
+    const line = (content: string): string =>
+      visibleWidth(content) > width
+        ? truncateToWidth(content, width, "", true)
+        : content;
+    const contentWidth = Math.max(0, width - 1);
 
     const processes = this.manager.list();
     const running = processes.filter((p) => LIVE_STATUSES.has(p.status));
@@ -198,31 +203,36 @@ export class LogDockComponent implements Component {
 
     if (!targetProc) {
       return [
-        renderPanelTitleLine("Process Logs", width, theme),
-        padLine(dim("No processes")),
-        padLine(dim("Run a command to start")),
+        line(` ${fg("accent", "Process Logs")}`),
+        line(dim("  No processes")),
+        line(dim("  Run a command to start")),
       ];
     }
 
     const logFiles = this.manager.getLogFiles(targetProc.id);
     if (!logFiles) {
       return [
-        renderPanelTitleLine("Process Logs", width, theme),
-        padLine(dim("Log files unavailable")),
+        line(` ${fg("accent", "Process Logs")}`),
+        line(dim("  Log files unavailable")),
       ];
     }
 
     const viewer = this.getViewer(targetProc.id, logFiles.combinedFile);
 
-    const logRows = Math.max(1, this.dockHeight - 2);
+    const logRows = Math.max(1, this.dockHeight - 1);
 
-    const title = `${targetProc.name} ${dim(`(${targetProc.id})`)}`;
+    const title = ` ${fg("accent", targetProc.name)} ${dim(
+      `(${targetProc.id}) · ${formatStatus(targetProc)} · ${formatRuntime(
+        targetProc.startTime,
+        targetProc.endTime,
+      )}`,
+    )}`;
     const lines: string[] = [];
-    lines.push(renderPanelTitleLine(title, width, theme));
+    lines.push(line(title));
 
-    const contentLines = viewer.renderLines(innerWidth, logRows);
+    const contentLines = viewer.renderLines(contentWidth, logRows);
     for (let i = 0; i < logRows; i++) {
-      lines.push(padLine(contentLines[i] ?? ""));
+      lines.push(line(` ${contentLines[i] ?? ""}`));
     }
 
     return lines.slice(0, this.dockHeight);
