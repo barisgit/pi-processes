@@ -120,38 +120,9 @@ export function setupProcessesTools(pi: ExtensionAPI, manager: ProcessManager) {
   pi.registerTool<typeof ProcessesParams, ProcessesDetails>({
     name: "process",
     label: "Process",
-    description: `Manage background processes. Actions:
-- start: Run command in background (requires 'name' and 'command')
-  - cwd (optional): Working directory for the command. Defaults to the session working directory. Use the cwd parameter instead of 'cd dir && command' shell wrappers.
-  - alertOnSuccess (default: false): Get a turn to react when process completes successfully
-  - alertOnFailure (default: true): Get a turn to react when process crashes/fails
-  - alertOnKill (default: false): Get a turn to react if killed by external signal (killing via tool never triggers a turn)
-  - logWatches (optional): Runtime output watches that trigger immediate alerts while running
-    - pattern: regex string to match per output line
-    - stream: stdout | stderr | both (default both)
-    - repeat: false by default (single-fire). Set true for repeat alerts
-- list: Show all managed processes with their IDs and names
-- output: Get recent stdout/stderr (requires 'id')
-- logs: Get log file paths to inspect with read tool (requires 'id')
-- kill: Terminate a process (requires 'id')
-- clear: Remove all finished processes from the list
-- write: Write to process stdin (requires 'id' and 'input', optional 'end' to close stdin)
-${
-  DEBUG_PREVIEW_ENABLED
-    ? "- debug_preview: Temporary renderer preview for process tool UIs (no process side effects)\n  - preview: start | list | output | logs | error (default: start)\n"
-    : ""
-}
-Important: You DON'T need to poll or wait for processes. Notifications arrive automatically based on your preferences. Start processes and continue with other work - you'll be informed if something requires attention.
-
-Note: User always sees process updates in the UI. The notify flags control whether YOU (the agent) get a turn to react (e.g. check results, fix code, restart).`,
+    description: `Manage long-running commands in the background. Start a named command, then list it, inspect recent output or log files, write to stdin, kill it, or clear finished entries. Process status remains visible to the user; alert flags and log watches only control when Pi gives you a follow-up turn. Notifications remove the need to poll.`,
     promptSnippet:
       "Manage background processes without blocking the conversation",
-    promptGuidelines: [
-      "Use the process tool for long-running commands such as dev servers, test watchers, build watchers, and log tails instead of bash.",
-      "Avoid shell background patterns such as &, nohup, disown, or setsid when the process tool fits.",
-      "After starting a process, continue other work instead of waiting for it.",
-      "Use the pi-processes skill for examples and best practices when a task depends on background processes.",
-    ],
 
     parameters: ProcessesParams,
 
