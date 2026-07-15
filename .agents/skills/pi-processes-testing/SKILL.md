@@ -140,13 +140,17 @@ Kill all and clear.
 
 ### /ps overlay
 
-- `/ps` opens full panel
-- `j/k` selects process
-- `J/K` scrolls logs
-- `enter` focuses selected process
-- `x` kills selected process
+- `/ps` opens the coordinated full panel and temporarily hides shared widgets
+- The primary/sidebar pane shows the derived navigation and action legend
+- `Tab` or left/right arrows switches pane focus
+- `j/k` or up/down arrows selects a process or scrolls focused output
+- `u/d` moves half a page; `g/G` jumps to the top or bottom
+- `[ ]` resizes panes
+- `s` hides or shows the process sidebar
+- `enter` focuses the selected process in the dock
+- `x` sends SIGTERM, or SIGKILL after a termination timeout
 - `c` clears finished processes
-- `q` quits
+- `q` quits and restores coordinated widgets
 
 ### /ps:logs overlay
 

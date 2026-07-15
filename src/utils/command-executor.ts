@@ -50,7 +50,9 @@ export function spawnCommand(
     knownPaths: DEFAULT_KNOWN_SHELL_PATHS,
   });
 
-  return spawn(shellExecutable, ["-lc", command], {
+  // Match Pi's command-tool environment: inherit the host environment
+  // unchanged and avoid login profiles that may rewrite PATH.
+  return spawn(shellExecutable, ["-c", command], {
     cwd,
     env: process.env,
     stdio: ["pipe", "pipe", "pipe"],

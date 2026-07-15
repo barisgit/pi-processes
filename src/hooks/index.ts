@@ -1,4 +1,8 @@
-import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
+import type {
+  ExtensionAPI,
+  ExtensionContext,
+} from "@earendil-works/pi-coding-agent";
+import type { UtilsClient } from "pi-extension-utils";
 import type { ResolvedProcessesConfig } from "../config";
 import type { ProcessManager } from "../manager";
 import { setupBackgroundBlocker } from "./background-blocker";
@@ -14,7 +18,11 @@ export function setupProcessesHooks(
   pi: ExtensionAPI,
   manager: ProcessManager,
   config: ResolvedProcessesConfig,
-): { update: () => void; dockActions: DockActions } {
+): {
+  update: () => void;
+  dockActions: DockActions;
+  getUtilsClient: (ctx: ExtensionContext) => UtilsClient | undefined;
+} {
   setupCleanupHook(pi, manager);
   setupProcessEndHook(pi, manager);
   setupProcessWatchHook(pi, manager);

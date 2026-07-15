@@ -2,6 +2,7 @@ import type {
   ExtensionAPI,
   ExtensionContext,
 } from "@earendil-works/pi-coding-agent";
+import { connect, type UtilsClient } from "pi-extension-utils";
 import { LogDockComponent } from "../../components/log-dock-component";
 import { configLoader, type ResolvedProcessesConfig } from "../../config";
 import { LIVE_STATUSES } from "../../constants";
@@ -20,8 +21,20 @@ export function setupProcessWidget(
   config: ResolvedProcessesConfig,
 ) {
   let activeCtx: ExtensionContext | null = null;
+  let widgetClient: UtilsClient | undefined;
   let logDockComponent: LogDockComponent | null = null;
   let logDockComponentTui: { requestRender(): void } | null = null;
+
+  const getUtilsClient = (ctx: ExtensionContext): UtilsClient | undefined => {
+    if (!ctx.hasUI) return undefined;
+    widgetClient ??= connect(pi, { ctx, clientId: "pi-processes" });
+    return widgetClient;
+  };
+
+  const removeWidgets = (): void => {
+    widgetClient?.widgets.remove("belowEditor", STATUS_WIDGET_ID);
+    widgetClient?.widgets.remove("aboveEditor", LOG_DOCK_WIDGET_ID);
+  };
 
   const dockState: DockState = {
     visibility: "hidden",
@@ -31,25 +44,30 @@ export function setupProcessWidget(
 
   function updateWidget() {
     if (!activeCtx?.hasUI) return;
+    const client = getUtilsClient(activeCtx);
+    if (!client) return;
 
     if (!configLoader.getConfig().widget.showStatusWidget) {
-      activeCtx.ui.setWidget(STATUS_WIDGET_ID, undefined);
+      client.widgets.remove("belowEditor", STATUS_WIDGET_ID);
     } else {
       const processes = manager.list();
       const maxWidth = process.stdout.columns || 120;
       const lines = renderStatusWidget(processes, activeCtx.ui.theme, maxWidth);
 
       if (lines.length === 0) {
-        activeCtx.ui.setWidget(STATUS_WIDGET_ID, undefined);
+        client.widgets.remove("belowEditor", STATUS_WIDGET_ID);
       } else {
-        activeCtx.ui.setWidget(STATUS_WIDGET_ID, lines, {
-          placement: "belowEditor",
-        });
+        client.widgets.set(
+          "belowEditor",
+          STATUS_WIDGET_ID,
+          () => ({ render: () => lines, invalidate: () => {} }),
+          { order: 10 },
+        );
       }
     }
 
     if (dockState.visibility === "hidden") {
-      activeCtx.ui.setWidget(LOG_DOCK_WIDGET_ID, undefined);
+      client.widgets.remove("aboveEditor", LOG_DOCK_WIDGET_ID);
       if (logDockComponent) {
         logDockComponent.dispose();
         logDockComponent = null;
@@ -68,10 +86,11 @@ export function setupProcessWidget(
         dockHeight: height,
       });
     } else {
-      const ctx = activeCtx;
-      ctx.ui.setWidget(
+      client.widgets.set(
+        "aboveEditor",
         LOG_DOCK_WIDGET_ID,
-        (tui: { requestRender(): void }, theme: typeof ctx.ui.theme) => {
+        (tui, theme) => {
+          logDockComponent?.dispose();
           logDockComponent = new LogDockComponent({
             manager,
             tui,
@@ -83,7 +102,7 @@ export function setupProcessWidget(
           logDockComponentTui = tui;
           return logDockComponent;
         },
-        { placement: "aboveEditor" },
+        { order: 10 },
       );
     }
   }
@@ -143,6 +162,9 @@ export function setupProcessWidget(
   });
 
   pi.on("session_start", async (_event, ctx) => {
+    removeWidgets();
+    widgetClient?.dispose();
+    widgetClient = undefined;
     if (logDockComponent) {
       logDockComponent.dispose();
       logDockComponent = null;
@@ -152,16 +174,17 @@ export function setupProcessWidget(
     updateWidget();
   });
 
-  pi.on("session_shutdown", async (_event, ctx) => {
+  pi.on("session_shutdown", async () => {
     activeCtx = null;
     if (logDockComponent) {
       logDockComponent.dispose();
       logDockComponent = null;
       logDockComponentTui = null;
     }
-    ctx.ui.setWidget(STATUS_WIDGET_ID, undefined);
-    ctx.ui.setWidget(LOG_DOCK_WIDGET_ID, undefined);
+    removeWidgets();
+    widgetClient?.dispose();
+    widgetClient = undefined;
   });
 
-  return { update: updateWidget, dockActions };
+  return { update: updateWidget, dockActions, getUtilsClient };
 }

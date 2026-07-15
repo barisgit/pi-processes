@@ -49,10 +49,13 @@ From there you can:
 
 Keys:
 
-- `j/k` or arrow keys: move selection
-- `J/K`: scroll preview
-- `enter`: pin selected process to the dock
-- `x`: kill selected process
+- `tab` or left/right arrows: switch pane focus
+- `j/k` or up/down arrows: select a process or scroll its output
+- `u/d`: move half a page; `g/G`: jump to the top or bottom
+- `[ ]`: resize the panes
+- `s`: hide or show the process sidebar
+- `enter`: focus and stream the selected process in the dock
+- `x`: send SIGTERM, or SIGKILL after a termination timeout
 - `c`: clear finished processes
 - `q` or `esc`: close
 

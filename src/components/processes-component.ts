@@ -1,34 +1,30 @@
 import type { Theme } from "@earendil-works/pi-coding-agent";
 import {
   type Component,
-  matchesKey,
   truncateToWidth,
   visibleWidth,
 } from "@earendil-works/pi-tui";
+import { type PaneOverlayComponent, paneOverlay } from "pi-extension-utils";
 import { configLoader } from "../config";
 import type { ProcessInfo } from "../constants";
 import type { ProcessManager } from "../manager";
 import { stripAnsi } from "../utils";
-import {
-  flatRule,
-  formatPath,
-  formatScrollInfo,
-  padRight,
-  titledBottomSegment,
-  titledTopSegment,
-} from "./render-helpers";
+import { flatRule, formatPath } from "./render-helpers";
 import { statusIcon, statusLabel } from "./status-format";
 
 const MIN_LEFT_PANE = 30;
 const MIN_RIGHT_PANE = 36;
 const LEFT_PANE_CAP = 72;
 const DEFAULT_LEFT_FRACTION = 0.38;
+const SPLIT_STEP_COLS = 4;
 const MIN_BODY_HEIGHT = 18;
 const CHROME_ROWS = 2;
-const DETAIL_HEADER_ROWS = 9;
 
-function computeBodyHeight(): number {
-  const rows = process.stdout.rows ?? 32;
+function computeBodyHeight(tui: unknown): number {
+  const rows =
+    (tui as { terminal?: { rows?: number } })?.terminal?.rows ??
+    process.stdout.rows ??
+    32;
   return Math.max(MIN_BODY_HEIGHT, rows - CHROME_ROWS);
 }
 
@@ -81,303 +77,140 @@ function fitCell(
   return clipped + " ".repeat(pad);
 }
 
-type PaneFocus = "list" | "log";
-
 export class ProcessesComponent implements Component {
-  private tui: { requestRender: () => void };
-  private theme: Theme;
-  private onClose: (processId?: string) => void;
-  private manager: ProcessManager;
-
-  private selectedIndex = 0;
-  private processScrollOffset = 0;
-  private logScrollOffset = 0;
-  private scrollInfo = { above: 0, below: 0 };
-  private cachedLines: string[] = [];
-  private cachedWidth = 0;
-  private unsubscribe: (() => void) | null = null;
-  private focus: PaneFocus = "list";
-  private lastListHeight =
-    configLoader.getConfig().processList.maxVisibleProcesses;
-  private lastLogHeight = configLoader.getConfig().processList.maxPreviewLines;
-  private splitFraction = DEFAULT_LEFT_FRACTION;
+  private overlay: PaneOverlayComponent;
+  private unsubscribe: (() => void) | null;
 
   constructor(
-    tui: { requestRender: () => void },
-    theme: Theme,
-    onClose: (processId?: string) => void,
-    manager: ProcessManager,
+    private tui: { requestRender: () => void },
+    private theme: Theme,
+    private onClose: (processId?: string) => void,
+    private manager: ProcessManager,
   ) {
-    this.tui = tui;
-    this.theme = theme;
-    this.onClose = onClose;
-    this.manager = manager;
-
+    this.overlay = this.createPaneOverlay();
     this.unsubscribe = this.manager.onEvent(() => {
-      this.invalidate();
       this.tui.requestRender();
     });
   }
 
-  handleInput(data: string): boolean {
-    const processes = this.manager.list();
+  private createPaneOverlay(): PaneOverlayComponent {
+    const factory = paneOverlay<string | undefined, ProcessInfo>({
+      height: computeBodyHeight,
+      primary: {
+        mode: "cursor",
+        rows: () => this.manager.list(),
+        selectionKey: (proc) => proc.id,
+        renderRow: (proc, ctx) =>
+          this.renderProcessRow(
+            proc,
+            proc.id === ctx.selectedKey,
+            Math.max(1, ctx.primary.width),
+          ),
+        title: () => {
+          const processes = this.manager.list();
+          const running = processes.filter(
+            (proc) => proc.status === "running",
+          ).length;
+          return { label: "Processes", tail: `${running} running` };
+        },
+        footer: (ctx) => {
+          const total = this.manager.list().length;
+          return total > 0 ? `${ctx.selectedIndex + 1}/${total}` : "";
+        },
+      },
+      detail: {
+        rows: (ctx) => {
+          const selected = ctx.selectedRow;
+          return selected
+            ? this.buildRightPane(selected, Math.max(1, ctx.detail.width))
+            : [this.theme.fg("dim", "No background processes")];
+        },
+        title: (ctx) => {
+          const selected = ctx.selectedRow;
+          if (!selected) return "(no selection)";
+          return {
+            label: selected.name,
+            tail: statusLabel(selected),
+            tailRendered: this.formatStatus(selected),
+            tailPlain: statusLabel(selected),
+          };
+        },
+      },
+      closeKeys: ["escape", "q"],
+      legendPlacement: "primary",
+      collapse: { key: "s", label: "sidebar", collapsedWidth: 0 },
+      perSelectionScroll: true,
+      stickyBottom: true,
+      split: {
+        initialFraction: DEFAULT_LEFT_FRACTION,
+        minPrimaryWidth: MIN_LEFT_PANE,
+        minDetailWidth: MIN_RIGHT_PANE,
+        maxPrimaryWidth: LEFT_PANE_CAP,
+        stepCols: SPLIT_STEP_COLS,
+      },
+      customActions: [
+        {
+          keys: "return",
+          label: "stream",
+          run: (ctx) => {
+            if (ctx.selectedRow) ctx.close(ctx.selectedRow.id);
+          },
+        },
+        {
+          keys: "x",
+          label: "term/kill",
+          run: (ctx) => this.killSelected(ctx.selectedRow),
+        },
+        {
+          keys: ["c", "C"],
+          label: "clear finished",
+          run: () => {
+            this.manager.clearFinished();
+          },
+        },
+      ],
+    });
 
-    if (matchesKey(data, "tab")) {
-      this.focus = this.focus === "list" ? "log" : "list";
-      this.invalidateAndRender();
-      return true;
-    }
-
-    if (matchesKey(data, "down") || data === "j") {
-      if (this.focus === "log") this.scrollLog(-1);
-      else this.moveSelection(processes, 1);
-      return true;
-    }
-
-    if (matchesKey(data, "up") || data === "k") {
-      if (this.focus === "log") this.scrollLog(1);
-      else this.moveSelection(processes, -1);
-      return true;
-    }
-
-    if (matchesKey(data, "pageDown")) {
-      if (this.focus === "list")
-        this.moveSelection(processes, this.lastListHeight);
-      else this.scrollLog(-this.lastLogHeight);
-      return true;
-    }
-
-    if (matchesKey(data, "pageUp")) {
-      if (this.focus === "list")
-        this.moveSelection(processes, -this.lastListHeight);
-      else this.scrollLog(this.lastLogHeight);
-      return true;
-    }
-
-    if (data === "g" || matchesKey(data, "home")) {
-      if (this.focus === "list") this.jumpSelection(processes, false);
-      else this.jumpLog(false);
-      return true;
-    }
-
-    if (data === "G" || matchesKey(data, "end")) {
-      if (this.focus === "list") this.jumpSelection(processes, true);
-      else this.jumpLog(true);
-      return true;
-    }
-
-    // Legacy explicit log scroll bindings remain available regardless of focus.
-    if (data === "J" || matchesKey(data, "shift+down")) {
-      this.scrollLog(-this.lastLogHeight);
-      return true;
-    }
-
-    if (data === "K" || matchesKey(data, "shift+up")) {
-      this.scrollLog(this.lastLogHeight);
-      return true;
-    }
-
-    // Stream logs for selected process
-    if (matchesKey(data, "return")) {
-      if (processes.length > 0 && this.selectedIndex < processes.length) {
-        const proc = processes[this.selectedIndex];
-        if (proc) {
-          this.unsubscribe?.();
-          this.unsubscribe = null;
-          this.onClose(proc.id);
-        }
-      }
-      return true;
-    }
-
-    // Kill selected process
-    if (data === "x") {
-      if (processes.length > 0 && this.selectedIndex < processes.length) {
-        const proc = processes[this.selectedIndex];
-        if (proc?.status === "running") {
-          void this.manager.kill(proc.id, {
-            signal: "SIGTERM",
-            timeoutMs: 3000,
-          });
-        } else if (proc?.status === "terminate_timeout") {
-          void this.manager.kill(proc.id, {
-            signal: "SIGKILL",
-            timeoutMs: 200,
-          });
-        }
-      }
-      return true;
-    }
-
-    // Clear finished processes
-    if (data === "c" || data === "C") {
-      const cleared = this.manager.clearFinished();
-      if (cleared > 0) {
-        const remaining = this.manager.list();
-        if (this.selectedIndex >= remaining.length) {
-          this.selectedIndex = Math.max(0, remaining.length - 1);
-        }
-        this.ensureProcessVisible(remaining.length);
-        this.invalidateAndRender();
-      }
-      return true;
-    }
-
-    // Close
-    if (matchesKey(data, "escape") || data === "q" || data === "Q") {
-      this.unsubscribe?.();
-      this.unsubscribe = null;
-      this.onClose();
-      return true;
-    }
-
-    return true;
+    return factory(this.tui as never, this.theme, undefined, (processId) => {
+      this.cleanupListener();
+      this.onClose(processId);
+    }) as PaneOverlayComponent;
   }
 
-  private moveSelection(processes: ProcessInfo[], delta: number): void {
-    if (processes.length === 0) return;
-    this.selectedIndex = Math.max(
-      0,
-      Math.min(processes.length - 1, this.selectedIndex + delta),
-    );
-    this.logScrollOffset = 0;
-    this.ensureProcessVisible(processes.length);
-    this.invalidateAndRender();
-  }
-
-  private jumpSelection(processes: ProcessInfo[], toEnd: boolean): void {
-    if (processes.length === 0) return;
-    this.selectedIndex = toEnd ? processes.length - 1 : 0;
-    this.logScrollOffset = 0;
-    this.ensureProcessVisible(processes.length);
-    this.invalidateAndRender();
-  }
-
-  private scrollLog(delta: number): void {
-    const maxOffset = this.maxLogScrollOffset();
-    this.logScrollOffset = Math.max(
-      0,
-      Math.min(maxOffset, this.logScrollOffset + delta),
-    );
-    this.invalidateAndRender();
-  }
-
-  private jumpLog(toEnd: boolean): void {
-    this.logScrollOffset = toEnd ? 0 : this.maxLogScrollOffset();
-    this.invalidateAndRender();
-  }
-
-  private maxLogScrollOffset(): number {
-    const selected = this.selectedProcess();
-    if (!selected) return 0;
-    const lines = this.getLogLines(selected, this.logTailLimit());
-    return Math.max(0, lines.length - this.lastLogHeight);
-  }
-
-  private logTailLimit(): number {
-    const cfg = configLoader.getConfig().processList;
-    return Math.max(cfg.maxPreviewLines * 4, this.lastLogHeight * 4, 100);
-  }
-
-  private selectedProcess(): ProcessInfo | undefined {
-    const processes = this.manager.list();
-    return processes[this.selectedIndex];
-  }
-
-  private ensureProcessVisible(totalProcesses: number): void {
-    const visibleCount = Math.min(this.lastListHeight, totalProcesses);
-    if (this.selectedIndex < this.processScrollOffset) {
-      this.processScrollOffset = this.selectedIndex;
-    } else if (this.selectedIndex >= this.processScrollOffset + visibleCount) {
-      this.processScrollOffset = this.selectedIndex - visibleCount + 1;
+  private killSelected(proc: ProcessInfo | undefined): void {
+    if (proc?.status === "running") {
+      void this.manager.kill(proc.id, {
+        signal: "SIGTERM",
+        timeoutMs: 3000,
+      });
+    } else if (proc?.status === "terminate_timeout") {
+      void this.manager.kill(proc.id, {
+        signal: "SIGKILL",
+        timeoutMs: 200,
+      });
     }
-    this.processScrollOffset = Math.max(
-      0,
-      Math.min(this.processScrollOffset, totalProcesses - visibleCount),
-    );
+  }
+
+  handleInput(data: string): void {
+    this.overlay.handleInput(data);
   }
 
   invalidate(): void {
-    this.cachedWidth = 0;
-    this.cachedLines = [];
+    // paneOverlay resolves rows and detail output lazily during render.
   }
 
   render(width: number): string[] {
-    if (width === this.cachedWidth && this.cachedLines.length > 0) {
-      return this.cachedLines;
-    }
-
-    const w = Math.max(8, width);
-    const leftWidth = this.computeLeftWidth(w);
-    const rightWidth = Math.max(1, w - 3 - leftWidth);
-    const bodyHeight = computeBodyHeight();
-
-    const processes = this.manager.list();
-    if (this.selectedIndex >= processes.length) {
-      this.selectedIndex = Math.max(0, processes.length - 1);
-    }
-
-    this.lastLogHeight = Math.max(1, bodyHeight - DETAIL_HEADER_ROWS - 1);
-
-    const selected = processes[this.selectedIndex];
-    const rightLines = selected
-      ? this.buildRightPane(selected, rightWidth)
-      : [this.theme.fg("dim", "No background processes")];
-
-    const listHeight = bodyHeight;
-    this.lastListHeight = listHeight;
-    this.ensureProcessVisible(processes.length);
-    const visibleProcesses = processes.slice(
-      this.processScrollOffset,
-      this.processScrollOffset + listHeight,
-    );
-    const leftLines =
-      processes.length === 0
-        ? [
-            this.theme.fg("dim", "No background processes"),
-            this.theme.fg("dim", "Use the processes tool to start commands"),
-          ]
-        : visibleProcesses.map((proc, index) =>
-            this.renderProcessRow(
-              proc,
-              this.processScrollOffset + index === this.selectedIndex,
-              leftWidth,
-            ),
-          );
-
-    const visibleRight = rightLines.slice(0, bodyHeight);
-
-    const rows: string[] = [
-      this.topBorder(leftWidth, rightWidth, processes, selected),
-    ];
-    for (let i = 0; i < bodyHeight; i++) {
-      rows.push(
-        this.bodyRow(
-          leftLines[i] ?? "",
-          visibleRight[i] ?? "",
-          leftWidth,
-          rightWidth,
-        ),
-      );
-    }
-    rows.push(this.bottomBorder(leftWidth, rightWidth, processes.length));
-
-    this.cachedLines = rows;
-    this.cachedWidth = width;
-    return this.cachedLines;
+    return this.overlay.render(width);
   }
 
-  private computeLeftWidth(totalWidth: number): number {
-    const interiorWidth = Math.max(0, totalWidth - 3);
-    if (interiorWidth <= 0) return 0;
-    const raw = Math.round(interiorWidth * this.splitFraction);
-    const capped = Math.min(
-      LEFT_PANE_CAP,
-      Math.max(0, interiorWidth - MIN_RIGHT_PANE),
-    );
-    const maxLeft = capped > 0 ? capped : interiorWidth;
-    const minLeft = Math.min(MIN_LEFT_PANE, maxLeft);
-    return Math.max(minLeft, Math.min(maxLeft, raw));
+  dispose(): void {
+    this.cleanupListener();
+    this.overlay.dispose();
+  }
+
+  private cleanupListener(): void {
+    this.unsubscribe?.();
+    this.unsubscribe = null;
   }
 
   private renderProcessRow(
@@ -431,37 +264,25 @@ export class ProcessesComponent implements Component {
     field("stderr", formatPath(proc.stderrFile));
 
     const logLines = this.getLogLines(proc, this.logTailLimit());
-    const maxOffset = Math.max(0, logLines.length - this.lastLogHeight);
-    if (this.logScrollOffset > maxOffset) this.logScrollOffset = maxOffset;
-    const startIdx = Math.max(
-      0,
-      logLines.length - this.lastLogHeight - this.logScrollOffset,
-    );
-    const endIdx = Math.min(logLines.length, startIdx + this.lastLogHeight);
-    this.scrollInfo = {
-      above: startIdx,
-      below: Math.max(0, logLines.length - endIdx),
-    };
-
-    const scrollHint = formatScrollInfo(
-      this.scrollInfo.above,
-      this.scrollInfo.below,
-    );
-    lines.push(
-      flatRule(theme, scrollHint ? `output · ${scrollHint}` : "output", width),
-    );
+    lines.push(flatRule(theme, "output", width));
 
     if (logLines.length === 0) {
       lines.push(dim("(no output yet)"));
       return lines;
     }
 
-    for (const line of logLines.slice(startIdx, endIdx)) {
+    for (const line of logLines) {
       const text = truncateToWidth(stripAnsi(line.text), width, "");
       lines.push(line.type === "stderr" ? theme.fg("warning", text) : text);
     }
 
     return lines;
+  }
+
+  private logTailLimit(): number {
+    const cfg = configLoader.getConfig().processList;
+    const detailHeight = Math.max(1, computeBodyHeight(this.tui) - 10);
+    return Math.max(cfg.maxPreviewLines * 4, detailHeight * 4, 100);
   }
 
   private getLogLines(
@@ -477,85 +298,6 @@ export class ProcessesComponent implements Component {
       ...splitOutput.stdout.map((text) => ({ type: "stdout" as const, text })),
       ...splitOutput.stderr.map((text) => ({ type: "stderr" as const, text })),
     ];
-  }
-
-  private topBorder(
-    leftWidth: number,
-    rightWidth: number,
-    processes: ProcessInfo[],
-    selected: ProcessInfo | undefined,
-  ): string {
-    const running = processes.filter(
-      (proc) => proc.status === "running",
-    ).length;
-    const leftTail = `${running} running`;
-    const leftSegment = titledTopSegment(this.theme, {
-      width: leftWidth,
-      label: "Processes",
-      tail: leftTail,
-      labelColor: this.focus === "list" ? "accent" : "text",
-      labelBold: this.focus === "list",
-    });
-    const rightSegment = titledTopSegment(this.theme, {
-      width: rightWidth,
-      label: selected ? selected.name : "(no selection)",
-      tail: selected ? statusLabel(selected) : "",
-      tailRendered: selected ? this.formatStatus(selected) : "",
-      tailPlain: selected ? statusLabel(selected) : "",
-      labelColor: this.focus === "log" ? "accent" : "text",
-      labelBold: this.focus === "log",
-    });
-    const corner = (s: string) => this.theme.fg("dim", s);
-    return `${corner("╭")}${leftSegment}${corner("┬")}${rightSegment}${corner("╮")}`;
-  }
-
-  private bottomBorder(
-    leftWidth: number,
-    rightWidth: number,
-    totalProcesses: number,
-  ): string {
-    const leftHint =
-      totalProcesses > 0
-        ? `${this.selectedIndex + 1}/${totalProcesses}  tab focus  enter stream  x term/kill  c clear`
-        : "tab focus  q quit";
-    const maxLogScroll = this.maxLogScrollOffset();
-    const rightScroll =
-      maxLogScroll > 0 ? `  ${this.logScrollOffset}/${maxLogScroll}` : "";
-    const rightHint = `j/k scroll  J/K page  g/G top/bottom  q quit${rightScroll}`;
-    const leftSegment = titledBottomSegment(
-      this.theme,
-      leftWidth,
-      leftHint,
-      this.focus === "list",
-    );
-    const rightSegment = titledBottomSegment(
-      this.theme,
-      rightWidth,
-      rightHint,
-      this.focus === "log",
-    );
-    const corner = (s: string) => this.theme.fg("dim", s);
-    return `${corner("╰")}${leftSegment}${corner("┴")}${rightSegment}${corner("╯")}`;
-  }
-
-  private bodyRow(
-    left: string,
-    right: string,
-    leftWidth: number,
-    rightWidth: number,
-  ): string {
-    const border = this.theme.fg("dim", "│");
-    const leftCell = padRight(truncateToWidth(left, leftWidth, ""), leftWidth);
-    const rightCell = padRight(
-      truncateToWidth(right, rightWidth, ""),
-      rightWidth,
-    );
-    return `${border}${leftCell}${border}${rightCell}${border}`;
-  }
-
-  private invalidateAndRender(): void {
-    this.invalidate();
-    this.tui.requestRender();
   }
 
   private formatStatus(proc: ProcessInfo): string {

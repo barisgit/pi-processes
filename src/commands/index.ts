@@ -9,7 +9,11 @@
  * /ps:dock [show|hide|toggle] - Control dock visibility
  */
 
-import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
+import type {
+  ExtensionAPI,
+  ExtensionContext,
+} from "@earendil-works/pi-coding-agent";
+import type { UtilsClient } from "pi-extension-utils";
 import type { DockActions } from "../hooks/widget";
 import type { ProcessManager } from "../manager";
 import { registerPsClearCommand } from "./clear";
@@ -23,8 +27,9 @@ export function setupProcessesCommands(
   pi: ExtensionAPI,
   manager: ProcessManager,
   dockActions: DockActions,
+  getUtilsClient: (ctx: ExtensionContext) => UtilsClient | undefined,
 ): void {
-  registerPsCommand(pi, manager, dockActions);
+  registerPsCommand(pi, manager, dockActions, getUtilsClient);
   registerPsPinCommand(pi, manager, dockActions);
   registerPsLogsCommand(pi, manager);
   registerPsKillCommand(pi, manager, dockActions);

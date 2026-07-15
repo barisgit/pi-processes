@@ -1,4 +1,4 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it, vi } from "vitest";
 import { configLoader } from "../config";
 import { stripAnsi } from "../utils";
 import { ProcessesComponent } from "./processes-component";
@@ -102,5 +102,87 @@ describe("ProcessesComponent two-pane render", () => {
     for (const line of c.render(60)) {
       expect(stripAnsi(line).length).toBe(60);
     }
+  });
+
+  it("renders the standard pane overlay legend and toggles the process sidebar", () => {
+    const mgr = makeManager([
+      makeProc("p1", "running"),
+      makeProc("p2", "running"),
+    ]);
+    const c = new ProcessesComponent(
+      { requestRender: () => {} },
+      fakeTheme as never,
+      () => {},
+      mgr as never,
+    );
+
+    const expanded = c.render(100).map(stripAnsi);
+    expect(expanded.join("\n")).toMatch(/tab\/←\/→\s+focus/);
+    expect(expanded.join("\n")).toMatch(/j\/k\s+select/);
+    expect(expanded.join("\n")).toMatch(/return\s+stream/);
+
+    c.handleInput("\u001b[B");
+    expect(stripAnsi(c.render(100)[0] ?? "")).toContain("proc-p2");
+
+    c.handleInput("s");
+    const collapsed = c.render(100).map(stripAnsi);
+    expect(collapsed[0]).not.toContain("┬");
+    expect(collapsed[collapsed.length - 1]).toContain("s sidebar");
+    expect(collapsed.every((line) => line.length === 100)).toBe(true);
+
+    c.handleInput("s");
+    expect(stripAnsi(c.render(100)[0] ?? "")).toContain("┬");
+  });
+
+  it("keeps process actions and cleans up its manager listener", () => {
+    const processes = [
+      makeProc("p1", "running"),
+      makeProc("p2", "terminate_timeout"),
+    ];
+    let listener: (() => void) | undefined;
+    const unsubscribe = vi.fn();
+    const kill = vi.fn(async () => {});
+    const clearFinished = vi.fn(() => 1);
+    const requestRender = vi.fn();
+    const onClose = vi.fn();
+    const mgr = {
+      ...makeManager(processes),
+      onEvent: (callback: () => void) => {
+        listener = callback;
+        return unsubscribe;
+      },
+      kill,
+      clearFinished,
+    };
+    const c = new ProcessesComponent(
+      { requestRender },
+      fakeTheme as never,
+      onClose,
+      mgr as never,
+    );
+
+    c.render(100);
+    listener?.();
+    expect(requestRender).toHaveBeenCalled();
+
+    c.handleInput("x");
+    expect(kill).toHaveBeenLastCalledWith("p1", {
+      signal: "SIGTERM",
+      timeoutMs: 3000,
+    });
+
+    c.handleInput("\u001b[B");
+    c.handleInput("x");
+    expect(kill).toHaveBeenLastCalledWith("p2", {
+      signal: "SIGKILL",
+      timeoutMs: 200,
+    });
+
+    c.handleInput("c");
+    expect(clearFinished).toHaveBeenCalledOnce();
+
+    c.handleInput("\r");
+    expect(onClose).toHaveBeenCalledWith("p2");
+    expect(unsubscribe).toHaveBeenCalledOnce();
   });
 });

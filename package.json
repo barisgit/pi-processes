@@ -16,6 +16,7 @@
   },
   "pi": {
     "extensions": [
+      "./node_modules/pi-extension-utils/dist/index.js",
       "./src/index.ts"
     ],
     "skills": [
@@ -35,7 +36,10 @@
   "dependencies": {
     "@aliou/pi-utils-settings": "^0.15.1",
     "@aliou/pi-utils-ui": "^0.4.1",
-    "@aliou/sh": "^0.1.0"
+    "@aliou/sh": "^0.1.0",
+    "jsonc-parser": "^3.3.1",
+    "pi-extension-utils": "^0.5.2",
+    "typebox": "^1.3.6"
   },
   "peerDependencies": {
     "@earendil-works/pi-ai": "*",
@@ -77,5 +81,8 @@
     "typebox": {
       "optional": true
     }
-  }
+  },
+  "bundledDependencies": [
+    "pi-extension-utils"
+  ]
 }

@@ -99,8 +99,11 @@ LLM calls process(action: "write", id, input)
 
 ```
 /ps
-  → opens ProcessesComponent (full-screen takeover, blocks input)
-      keyboard: j/k or arrows move, J/K scroll preview, Enter selects, x kills, c clears, q/Esc close
+  → client.ui.fullscreen() acquires coordinated fullscreen ownership and hides shared widgets
+  → opens ProcessesComponent using pi-extension-utils paneOverlay (full-screen takeover, blocks input)
+      keyboard: Tab or ←/→ switches pane focus; j/k or ↑/↓ selects/scrolls; u/d pages; g/G jumps;
+                [/] resizes panes; s toggles the sidebar; Enter selects; x kills; c clears; q/Esc closes
+      legend: derived navigation and custom actions render in the primary/sidebar pane
       on close with selection: dockState.setFocus(processId)  [expands dock]
       on close without selection: no side effect
 

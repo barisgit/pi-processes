@@ -1,7 +1,11 @@
+import type { ChildProcess } from "node:child_process";
+import { spawn } from "node:child_process";
 import type * as nodeFs from "node:fs";
 import { existsSync } from "node:fs";
 import { describe, expect, it, vi } from "vitest";
-import { resolveShellExecutable } from "./command-executor";
+import { resolveShellExecutable, spawnCommand } from "./command-executor";
+
+vi.mock("node:child_process", () => ({ spawn: vi.fn() }));
 
 vi.mock("node:fs", async (importOriginal) => {
   const actual = await importOriginal<typeof nodeFs>();
@@ -44,5 +48,26 @@ describe("resolveShellExecutable", () => {
         knownPaths: ["/bin/bash", "/usr/bin/bash"],
       }),
     ).toThrow(/shell/i);
+  });
+});
+
+describe("spawnCommand", () => {
+  it("uses a non-login shell and preserves Pi's inherited environment", () => {
+    existsSyncMock.mockImplementation((path) => path === "/bin/bash");
+    const child = {} as ChildProcess;
+    vi.mocked(spawn).mockReturnValue(child);
+
+    expect(spawnCommand("uv run worker.py", "/tmp/project", "/bin/bash")).toBe(
+      child,
+    );
+    expect(spawn).toHaveBeenCalledWith(
+      "/bin/bash",
+      ["-c", "uv run worker.py"],
+      expect.objectContaining({
+        cwd: "/tmp/project",
+        env: process.env,
+        detached: true,
+      }),
+    );
   });
 });
