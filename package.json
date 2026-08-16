@@ -16,7 +16,6 @@
   },
   "pi": {
     "extensions": [
-      "./node_modules/pi-extension-utils/dist/index.js",
       "./src/index.ts"
     ],
     "skills": [
@@ -81,8 +80,5 @@
     "typebox": {
       "optional": true
     }
-  },
-  "bundledDependencies": [
-    "pi-extension-utils"
-  ]
+  }
 }
