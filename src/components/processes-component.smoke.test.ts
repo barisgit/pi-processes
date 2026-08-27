@@ -104,6 +104,19 @@ describe("ProcessesComponent two-pane render", () => {
     }
   });
 
+  it("fits the complete frame within a short terminal", () => {
+    const mgr = makeManager([makeProc("p1", "running")]);
+    const tui = { requestRender: () => {}, terminal: { rows: 16 } };
+    const c = new ProcessesComponent(
+      tui,
+      fakeTheme as never,
+      () => {},
+      mgr as never,
+    );
+
+    expect(c.render(100)).toHaveLength(16);
+  });
+
   it("renders the standard pane overlay legend and toggles the process sidebar", () => {
     const mgr = makeManager([
       makeProc("p1", "running"),

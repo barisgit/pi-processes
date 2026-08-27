@@ -17,15 +17,15 @@ const MIN_RIGHT_PANE = 36;
 const LEFT_PANE_CAP = 72;
 const DEFAULT_LEFT_FRACTION = 0.38;
 const SPLIT_STEP_COLS = 4;
-const MIN_BODY_HEIGHT = 18;
+const DEFAULT_TERMINAL_ROWS = 32;
 const CHROME_ROWS = 2;
 
 function computeBodyHeight(tui: unknown): number {
   const rows =
     (tui as { terminal?: { rows?: number } })?.terminal?.rows ??
     process.stdout.rows ??
-    32;
-  return Math.max(MIN_BODY_HEIGHT, rows - CHROME_ROWS);
+    DEFAULT_TERMINAL_ROWS;
+  return Math.max(1, rows - CHROME_ROWS);
 }
 
 function formatRuntime(startTime: number, endTime: number | null): string {
