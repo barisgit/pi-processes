@@ -30,8 +30,8 @@ importers:
         specifier: ^3.3.1
         version: 3.3.1
       pi-extension-utils:
-        specifier: ^0.7.3
-        version: 0.7.3(@earendil-works/pi-agent-core@0.75.3(ws@8.19.0)(zod@3.25.76))(@earendil-works/pi-ai@0.75.3(ws@8.19.0)(zod@3.25.76))(@earendil-works/pi-coding-agent@0.75.3(ws@8.19.0)(zod@3.25.76))(@earendil-works/pi-tui@0.75.3)
+        specifier: ^0.7.4
+        version: 0.7.4(@earendil-works/pi-agent-core@0.75.3(ws@8.19.0)(zod@3.25.76))(@earendil-works/pi-ai@0.75.3(ws@8.19.0)(zod@3.25.76))(@earendil-works/pi-coding-agent@0.75.3(ws@8.19.0)(zod@3.25.76))(@earendil-works/pi-tui@0.75.3)
       typebox:
         specifier: ^1.3.6
         version: 1.3.6
@@ -1549,8 +1549,8 @@ packages:
   pathe@2.0.3:
     resolution: {integrity: sha512-WUjGcAqP1gQacoQe+OBJsFA7Ld4DyXuUIjZ5cc75cLHvJ7dtNsTugphxIADwspS+AraAUePCKrSVtPLFj/F88w==}
 
-  pi-extension-utils@0.7.3:
-    resolution: {integrity: sha512-zJUbGhM0h6pakMa+Tvgd3ab78yiFsDItAJA3NnSqbPm8LKUEOYZgMh7UQ5aCsX+2utS3+lpTR4K/mZyCTXrLhg==}
+  pi-extension-utils@0.7.4:
+    resolution: {integrity: sha512-n3VKpQ+2yuMan7kFlo197hT9zi2Frz+fr40lwWMBqJ8GsNT024bl8GjwhMiD1uI5/mm+LguDA+pAIVuVi3vvQg==}
     peerDependencies:
       '@earendil-works/pi-agent-core': '*'
       '@earendil-works/pi-ai': '*'
@@ -3690,7 +3690,7 @@ snapshots:
 
   pathe@2.0.3: {}
 
-  pi-extension-utils@0.7.3(@earendil-works/pi-agent-core@0.75.3(ws@8.19.0)(zod@3.25.76))(@earendil-works/pi-ai@0.75.3(ws@8.19.0)(zod@3.25.76))(@earendil-works/pi-coding-agent@0.75.3(ws@8.19.0)(zod@3.25.76))(@earendil-works/pi-tui@0.75.3):
+  pi-extension-utils@0.7.4(@earendil-works/pi-agent-core@0.75.3(ws@8.19.0)(zod@3.25.76))(@earendil-works/pi-ai@0.75.3(ws@8.19.0)(zod@3.25.76))(@earendil-works/pi-coding-agent@0.75.3(ws@8.19.0)(zod@3.25.76))(@earendil-works/pi-tui@0.75.3):
     dependencies:
       '@earendil-works/pi-agent-core': 0.75.3(ws@8.19.0)(zod@3.25.76)
       '@earendil-works/pi-ai': 0.75.3(ws@8.19.0)(zod@3.25.76)
