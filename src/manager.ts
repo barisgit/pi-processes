@@ -2,7 +2,7 @@ import type { ChildProcess } from "node:child_process";
 import { EventEmitter } from "node:events";
 import {
   appendFileSync,
-  mkdirSync,
+  mkdtempSync,
   readFileSync,
   rmSync,
   statSync,
@@ -24,6 +24,7 @@ import {
 } from "./constants";
 import { isProcessGroupAlive, killProcessGroup } from "./utils";
 import { spawnCommand } from "./utils/command-executor";
+import { LogLines } from "./utils/log-lines";
 
 interface ResolvedWatch {
   index: number;
@@ -40,8 +41,8 @@ interface ManagedProcess extends ProcessInfo {
   stdinClosed: boolean;
   lastSignalSent: NodeJS.Signals | null;
   combinedFile: string;
-  stdoutPendingLine: string;
-  stderrPendingLine: string;
+  stdoutLines: LogLines;
+  stderrLines: LogLines;
   watches: ResolvedWatch[];
 }
 
@@ -61,8 +62,7 @@ export class ProcessManager {
   private pendingOutputEmit: Map<string, NodeJS.Timeout> = new Map();
 
   constructor(options?: ProcessManagerOptions) {
-    this.logDir = join(tmpdir(), `pi-processes-${Date.now()}`);
-    mkdirSync(this.logDir, { recursive: true });
+    this.logDir = mkdtempSync(join(tmpdir(), "pi-processes-"));
     this.getConfiguredShellPath =
       options?.getConfiguredShellPath ?? (() => undefined);
   }
@@ -193,9 +193,9 @@ export class ProcessManager {
     const stderrFile = join(this.logDir, `${id}-stderr.log`);
     const combinedFile = join(this.logDir, `${id}-combined.log`);
 
-    appendFileSync(stdoutFile, "");
-    appendFileSync(stderrFile, "");
-    appendFileSync(combinedFile, "");
+    appendFileSync(stdoutFile, "", { mode: 0o600, flag: "wx" });
+    appendFileSync(stderrFile, "", { mode: 0o600, flag: "wx" });
+    appendFileSync(combinedFile, "", { mode: 0o600, flag: "wx" });
 
     const child = spawnCommand(command, cwd, this.getConfiguredShellPath());
 
@@ -222,8 +222,8 @@ export class ProcessManager {
       stdin: child.stdin,
       stdinClosed: false,
       lastSignalSent: null,
-      stdoutPendingLine: "",
-      stderrPendingLine: "",
+      stdoutLines: new LogLines(stdoutFile, combinedFile, "1:"),
+      stderrLines: new LogLines(stderrFile, combinedFile, "2:"),
       watches: resolvedWatches,
     };
 
@@ -245,9 +245,7 @@ export class ProcessManager {
     child.stdout?.on("data", (data: Buffer) => {
       try {
         appendFileSync(stdoutFile, data);
-        const lines = this.extractCompleteLines(managed, "stdout", data);
-        const tagged = lines.map((line) => `1:${line}\n`).join("");
-        if (tagged) appendFileSync(combinedFile, tagged);
+        const lines = managed.stdoutLines.push(data);
         this.matchWatches(managed, "stdout", lines);
         this.notifyOutputChanged(id);
       } catch {
@@ -258,9 +256,7 @@ export class ProcessManager {
     child.stderr?.on("data", (data: Buffer) => {
       try {
         appendFileSync(stderrFile, data);
-        const lines = this.extractCompleteLines(managed, "stderr", data);
-        const tagged = lines.map((line) => `2:${line}\n`).join("");
-        if (tagged) appendFileSync(combinedFile, tagged);
+        const lines = managed.stderrLines.push(data);
         this.matchWatches(managed, "stderr", lines);
         this.notifyOutputChanged(id);
       } catch {
@@ -627,55 +623,15 @@ export class ProcessManager {
     });
   }
 
-  private extractCompleteLines(
-    managed: ManagedProcess,
-    source: "stdout" | "stderr",
-    data: Buffer,
-  ): string[] {
-    const chunk = data.toString();
-    const pending =
-      source === "stdout"
-        ? managed.stdoutPendingLine
-        : managed.stderrPendingLine;
-    const merged = pending + chunk;
-    const parts = merged.split(/\r?\n/);
-    const completeLines = parts.slice(0, -1);
-    const nextPending = parts[parts.length - 1] ?? "";
-
-    if (source === "stdout") {
-      managed.stdoutPendingLine = nextPending;
-    } else {
-      managed.stderrPendingLine = nextPending;
-    }
-
-    return completeLines;
-  }
-
   private flushPendingLines(managed: ManagedProcess): void {
-    if (managed.stdoutPendingLine) {
+    for (const source of ["stdout", "stderr"] as const) {
       try {
-        appendFileSync(
-          managed.combinedFile,
-          `1:${managed.stdoutPendingLine}\n`,
-        );
+        const lines =
+          managed[source === "stdout" ? "stdoutLines" : "stderrLines"];
+        this.matchWatches(managed, source, lines.flush());
       } catch {
-        // Ignore
+        // Cleanup may have removed the logs before the child close event.
       }
-      this.matchWatches(managed, "stdout", [managed.stdoutPendingLine]);
-      managed.stdoutPendingLine = "";
-    }
-
-    if (managed.stderrPendingLine) {
-      try {
-        appendFileSync(
-          managed.combinedFile,
-          `2:${managed.stderrPendingLine}\n`,
-        );
-      } catch {
-        // Ignore
-      }
-      this.matchWatches(managed, "stderr", [managed.stderrPendingLine]);
-      managed.stderrPendingLine = "";
     }
   }
 

@@ -37,3 +37,5 @@ Use this skill when work needs a long-running command to stay alive while Pi con
 - Users can inspect and manage running processes from `/ps`.
 - Use `write` when a process expects stdin input.
 - Use `output` for a quick tail and `logs` when the full log files are more useful.
+- `logWatches` searches only the first 64 KiB of each LF-, CR-, or CRLF-delimited line (or the final line at exit). Regex anchors apply to that window. Full content remains in the log files; markers beyond the window will not trigger a watch.
+- Watch regexes still run synchronously. Avoid untrusted or complex patterns: the input window does not prevent regex backtracking from blocking Pi.

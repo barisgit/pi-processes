@@ -49,6 +49,16 @@ Avoid shell background patterns when the process tool fits.
 
 Background command blocking is optional. It is controlled by `interception.blockBackgroundCommands`.
 
+### Log storage and watch windows
+
+Each manager creates a random private temporary directory. Log files are created exclusively with mode `0600`; the directory uses `mkdtemp` permissions (`0700`, subject to umask). No existing directory is chmod'd.
+
+Pending lines are offsets into the raw log files, not retained strings. At each LF, CR, or process end, the manager writes the full line into the combined log in batches of at most 64 KiB. Lines within the current data event use its bytes directly; only spans from earlier events are read back from the raw log. All completed lines in a data event share the output batch. CRLF is one delimiter, including when split across data events. Raw stdout and stderr keep their original bytes; combined logs normalize delimiters to LF and retain stream tags.
+
+Watches match the first 64 KiB of each logical line, decoded as UTF-8. A partial UTF-8 character at the window boundary is omitted. The rest of the line stays in the logs but is not searched. Regex anchors apply to this window, not to the full overlong line. Watches still fire at a delimiter or process end, not as partial output arrives. Repeat and stream filtering are unchanged.
+
+This memory bound is not regex safety. Matching still uses synchronous JavaScript regexes and can block the event loop. Cancellable matching and explicit timeout/queue-overflow notifications remain unresolved. Copying a completed long line also performs synchronous disk I/O; output retrieval APIs still read full files.
+
 ## Testing
 
 Useful local checks:
