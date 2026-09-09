@@ -63,7 +63,7 @@ export function setupMessageRenderer(pi: ExtensionAPI) {
       const details = message.details;
 
       if (!details) {
-        return new Text(getContentText(message.content), 0, 0);
+        return new Text(getContentText(message.content), 1, 0);
       }
 
       if (details.kind === "watch_matched") {
@@ -77,7 +77,7 @@ export function setupMessageRenderer(pi: ExtensionAPI) {
           theme.fg(streamColor, `[${details.source}]`) +
           theme.fg("muted", ` ${details.line}`);
 
-        return new Text(text, 0, 0);
+        return new Text(text, 1, 0);
       }
 
       let icon: string;
@@ -109,7 +109,7 @@ export function setupMessageRenderer(pi: ExtensionAPI) {
         theme.fg(color, statusText) +
         theme.fg("muted", ` ${details.runtime}`);
 
-      return new Text(text, 0, 0);
+      return new Text(text, 1, 0);
     },
   );
 }
