@@ -55,7 +55,7 @@ Keys:
 - `[ ]`: resize the panes
 - `s`: hide or show the process sidebar
 - `enter`: focus and stream the selected process in the dock
-- `x`: send SIGTERM, or SIGKILL after a termination timeout
+- `x`: stop the workload (SIGTERM, then automatic SIGKILL escalation); retry unresolved termination
 - `c`: clear finished processes
 - `q` or `esc`: close
 
@@ -113,6 +113,19 @@ Available settings include:
 
 <!-- VIDEO: {"id":"settings","title":"Adjust process extension settings"} -->
 
+## Workload lifetime and reload
+
+`/reload` keeps running workloads, process IDs, stdin, logs, and observed descendant ownership in the same Pi host process. The refreshed extension reconnects to that session's manager. Separate SDK sessions do not share process lists. This is not recovery after Pi crashes or restarts.
+
+Stopping gives the launcher time to forward SIGTERM, then signals any remaining observed descendants, including those in separate process groups. After the grace period it escalates to SIGKILL and rescans for children created during shutdown. Each signal checks the target's PID and start identity; it does not match by command name, working directory, or port.
+
+A launcher exiting does not finish the workload while observed descendants remain. `clear` only removes finished workloads. If inspection or termination cannot be confirmed, the entry stays unresolved and its logs remain available for a retry. Normal quit, `/new`, `/resume`, and `/fork` await cleanup rather than preserving running workloads.
+
+### Cleanup limits
+
+Ownership comes from periodically observed ancestry, so it still works when children strip their environment or later reparent. It is bounded cleanup, not OS-level containment: a child that reparents before observation can escape discovery. Start identities use Linux `/proc` start ticks or macOS `ps` start times (one-second resolution). Extremely fast PID reuse within that macOS time resolution cannot be distinguished. Portable Node signaling also has a final check-to-signal race. Failed inspections are treated as unknown, not proof that a workload has stopped.
+
+Unresolved records are retained only in the same host process. Quitting Pi cannot guarantee cleanup if the OS refuses inspection or signals.
 ## Platform support
 
 - macOS: supported

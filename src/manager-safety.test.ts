@@ -6,8 +6,8 @@ import { afterEach, expect, it } from "vitest";
 import { ProcessManager } from "./manager";
 
 const managers: ProcessManager[] = [];
-afterEach(() => {
-  for (const manager of managers.splice(0)) manager.cleanup();
+afterEach(async () => {
+  for (const manager of managers.splice(0)) await manager.cleanup();
 });
 function createManager() {
   const manager = new ProcessManager();
@@ -185,7 +185,7 @@ it("allows cleanup while a process has an unfinished line", async () => {
   );
   await expect.poll(() => manager.getFileSize(info.id)?.stdout).toBe(7);
   const done = ended(manager, info.id);
-  manager.cleanup();
+  await manager.cleanup();
   await done;
 });
 

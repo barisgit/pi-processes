@@ -3,7 +3,7 @@ import { setupProcessesCommands } from "./commands";
 import { registerProcessesSettings } from "./commands/settings";
 import { configLoader } from "./config";
 import { setupProcessesHooks } from "./hooks";
-import { ProcessManager } from "./manager";
+import { bindSessionManager } from "./session-manager";
 import { setupProcessesTools } from "./tools";
 
 export default async function (pi: ExtensionAPI) {
@@ -16,9 +16,11 @@ export default async function (pi: ExtensionAPI) {
   }
 
   await configLoader.load();
-  const manager = new ProcessManager({
-    getConfiguredShellPath: () => configLoader.getConfig().execution.shellPath,
-  });
+  const binding = bindSessionManager(
+    pi,
+    () => configLoader.getConfig().execution.shellPath,
+  );
+  const { manager } = binding;
 
   const config = configLoader.getConfig();
 
@@ -32,4 +34,5 @@ export default async function (pi: ExtensionAPI) {
   registerProcessesSettings(pi, () => {
     updateWidget();
   });
+  binding.finishSetup();
 }

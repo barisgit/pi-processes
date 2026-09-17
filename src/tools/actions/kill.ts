@@ -65,8 +65,8 @@ export async function executeKill(
 
   if (result.reason === "timeout") {
     const message =
-      `SIGTERM timed out for "${proc.name}" (${proc.id}). ` +
-      "Run /ps and press x on terminate_timeout to force kill (SIGKILL).";
+      `Could not confirm termination of "${proc.name}" (${proc.id}) after TERM/KILL. ` +
+      "The record and logs are retained. Retry kill to recheck owned processes.";
     return {
       content: [{ type: "text", text: message }],
       details: {

@@ -22,9 +22,9 @@ import {
   type StartOptions,
   type WriteResult,
 } from "./constants";
-import { isProcessGroupAlive, killProcessGroup } from "./utils";
 import { spawnCommand } from "./utils/command-executor";
 import { LogLines } from "./utils/log-lines";
+import { inspectProcesses, ProcessOwnership } from "./utils/process-ownership";
 
 interface ResolvedWatch {
   index: number;
@@ -44,6 +44,9 @@ interface ManagedProcess extends ProcessInfo {
   stdoutLines: LogLines;
   stderrLines: LogLines;
   watches: ResolvedWatch[];
+  ownership: ProcessOwnership | null;
+  launcherClosed: boolean;
+  launcherSignal: NodeJS.Signals | null;
 }
 
 interface ProcessManagerOptions {
@@ -53,8 +56,10 @@ interface ProcessManagerOptions {
 export class ProcessManager {
   private processes: Map<string, ManagedProcess> = new Map();
   private counter = 0;
+  private stops = new Map<string, Promise<KillResult>>();
   private logDir: string;
   private events = new EventEmitter();
+  private pendingNotifications: ManagerEvent[] | null = null;
   private watcher: ReturnType<typeof setInterval> | null = null;
   private getConfiguredShellPath: () => string | undefined;
 
@@ -73,7 +78,24 @@ export class ProcessManager {
   }
 
   private emit(event: ManagerEvent): void {
+    if (
+      this.pendingNotifications &&
+      (event.type === "process_ended" || event.type === "process_watch_matched")
+    ) {
+      this.pendingNotifications.push(event);
+      return;
+    }
     this.events.emit("event", event);
+  }
+
+  deferNotifications(): void {
+    this.pendingNotifications ??= [];
+  }
+
+  resumeNotifications(): void {
+    const pending = this.pendingNotifications;
+    this.pendingNotifications = null;
+    for (const event of pending ?? []) this.emit(event);
   }
 
   private notifyOutputChanged(id: string): void {
@@ -136,7 +158,8 @@ export class ProcessManager {
 
     this.watcher = setInterval(() => {
       this.livenessTick();
-    }, 5000);
+    }, 100);
+    this.watcher.unref();
   }
 
   private stopWatcherIfIdle(): void {
@@ -155,30 +178,28 @@ export class ProcessManager {
   }
 
   private livenessTick(): void {
+    if (!this.hasAliveishProcesses()) return;
+    const snapshot = inspectProcesses();
     for (const managed of this.processes.values()) {
       if (!LIVE_STATUSES.has(managed.status)) continue;
-      if (!managed.pid || managed.pid <= 0) continue;
-
-      const alive = isProcessGroupAlive(managed.pid);
-      if (alive) continue;
-
-      if (!managed.endTime) {
-        managed.endTime = Date.now();
-      }
-
+      const gone = managed.ownership?.refresh(snapshot);
+      if (!gone || !managed.launcherClosed) continue;
+      managed.endTime = Date.now();
+      managed.success =
+        managed.lastSignalSent || managed.launcherSignal
+          ? false
+          : managed.exitCode === 0;
       this.flushPendingOutputChanged(managed.id);
       this.flushPendingLines(managed);
-
-      if (managed.lastSignalSent) {
-        managed.success = false;
-        managed.exitCode = null;
-        this.transition(managed, "killed");
-      } else {
-        managed.success = false;
-        managed.exitCode = null;
-        this.transition(managed, "exited");
-      }
+      this.transition(
+        managed,
+        managed.lastSignalSent || managed.launcherSignal ? "killed" : "exited",
+      );
     }
+  }
+
+  setConfiguredShellPath(getPath: () => string | undefined): void {
+    this.getConfiguredShellPath = getPath;
   }
 
   start(
@@ -225,9 +246,30 @@ export class ProcessManager {
       stdoutLines: new LogLines(stdoutFile, combinedFile, "1:"),
       stderrLines: new LogLines(stderrFile, combinedFile, "2:"),
       watches: resolvedWatches,
+      ownership: child.pid ? new ProcessOwnership(child.pid) : null,
+      launcherClosed: false,
+      launcherSignal: null,
     };
 
     this.processes.set(id, managed);
+
+    // Failed spawns emit an asynchronous error even when no PID is returned.
+    child.on("error", (err) => {
+      try {
+        appendFileSync(stderrFile, `Process error: ${err.message}\n`);
+      } catch {
+        // Ignore
+      }
+
+      if (!managed.endTime) {
+        managed.exitCode = -1;
+        managed.success = false;
+        managed.endTime = Date.now();
+        this.flushPendingOutputChanged(id);
+        this.flushPendingLines(managed);
+        this.transition(managed, "exited");
+      }
+    });
 
     if (!child.pid) {
       try {
@@ -268,34 +310,9 @@ export class ProcessManager {
       if (managed.endTime) return;
 
       managed.exitCode = code;
-      managed.endTime = Date.now();
-      managed.success = code === 0;
-
-      this.flushPendingOutputChanged(id);
-      this.flushPendingLines(managed);
-
-      if (signal) {
-        this.transition(managed, "killed");
-      } else {
-        this.transition(managed, "exited");
-      }
-    });
-
-    child.on("error", (err) => {
-      try {
-        appendFileSync(stderrFile, `Process error: ${err.message}\n`);
-      } catch {
-        // Ignore
-      }
-
-      if (!managed.endTime) {
-        managed.exitCode = -1;
-        managed.success = false;
-        managed.endTime = Date.now();
-        this.flushPendingOutputChanged(id);
-        this.flushPendingLines(managed);
-        this.transition(managed, "exited");
-      }
+      managed.launcherClosed = true;
+      managed.launcherSignal = signal;
+      this.livenessTick();
     });
 
     this.emit({ type: "process_started", info: this.toProcessInfo(managed) });
@@ -375,7 +392,18 @@ export class ProcessManager {
     };
   }
 
-  async kill(
+  kill(
+    id: string,
+    opts?: { signal?: NodeJS.Signals; timeoutMs?: number },
+  ): Promise<KillResult> {
+    const pending = this.stops.get(id);
+    if (pending) return pending;
+    const stop = this.stop(id, opts).finally(() => this.stops.delete(id));
+    this.stops.set(id, stop);
+    return stop;
+  }
+
+  private async stop(
     id: string,
     opts?: { signal?: NodeJS.Signals; timeoutMs?: number },
   ): Promise<KillResult> {
@@ -415,27 +443,29 @@ export class ProcessManager {
 
     this.transition(managed, "terminating");
 
-    try {
-      killProcessGroup(managed.pid, signal);
-      managed.lastSignalSent = signal;
-    } catch (error) {
-      const err = error as NodeJS.ErrnoException;
-      if (err.code !== "EPERM") {
-        return {
-          ok: false,
-          info: this.toProcessInfo(managed),
-          reason: "error",
-        };
+    this.livenessTick();
+    managed.lastSignalSent = signal;
+    managed.ownership?.signal(signal, { onlyPid: managed.pid });
+
+    const waitUntil = async (deadline: number, escalation?: NodeJS.Signals) => {
+      while (Date.now() < deadline && LIVE_STATUSES.has(managed.status)) {
+        this.livenessTick();
+        if (escalation) managed.ownership?.signal(escalation);
+        await new Promise((resolve) => setTimeout(resolve, 50));
       }
+      this.livenessTick();
+    };
+
+    if (signal !== "SIGKILL") {
+      // Let launchers forward TERM first (some intentionally forward PID-only).
+      const deadline = Date.now() + timeoutMs;
+      await waitUntil(Date.now() + Math.min(500, timeoutMs / 2));
+      managed.ownership?.signal(signal, { excludePid: managed.pid });
+      await waitUntil(deadline);
     }
-
-    const graceMs = signal === "SIGKILL" ? 200 : timeoutMs;
-
-    await new Promise((r) => setTimeout(r, graceMs));
-
-    const alive = isProcessGroupAlive(managed.pid);
-
-    if (alive) {
+    // Re-scan while escalating, including children created during shutdown.
+    await waitUntil(Date.now() + 1000, "SIGKILL");
+    if (LIVE_STATUSES.has(managed.status)) {
       this.transition(managed, "terminate_timeout");
       return {
         ok: false,
@@ -443,16 +473,6 @@ export class ProcessManager {
         reason: "timeout",
       };
     }
-
-    if (!managed.endTime) {
-      managed.endTime = Date.now();
-      managed.exitCode = null;
-      managed.success = false;
-    }
-
-    this.flushPendingOutputChanged(id);
-    this.flushPendingLines(managed);
-    this.transition(managed, "killed");
     return { ok: true, info: this.toProcessInfo(managed) };
   }
 
@@ -528,15 +548,12 @@ export class ProcessManager {
     return cleared;
   }
 
-  shutdownKillAll(): void {
-    for (const p of this.processes.values()) {
-      if (!LIVE_STATUSES.has(p.status)) continue;
-      try {
-        killProcessGroup(p.pid, "SIGKILL");
-      } catch {
-        // Ignore - process may already be dead
-      }
-    }
+  async shutdownKillAll(): Promise<void> {
+    await Promise.all(
+      this.list()
+        .filter((p) => LIVE_STATUSES.has(p.status))
+        .map((p) => this.kill(p.id)),
+    );
   }
 
   stopWatcher(): void {
@@ -546,7 +563,10 @@ export class ProcessManager {
     }
   }
 
-  cleanup(): void {
+  async cleanup(): Promise<void> {
+    await this.shutdownKillAll();
+    // Unresolved ownership must remain controllable with its logs intact.
+    if (this.hasAliveishProcesses()) return;
     this.stopWatcher();
 
     for (const timeout of this.pendingOutputEmit.values()) {
@@ -555,15 +575,7 @@ export class ProcessManager {
     this.pendingOutputEmit.clear();
     this.lastOutputEmitAt.clear();
 
-    for (const p of this.processes.values()) {
-      if (!LIVE_STATUSES.has(p.status)) continue;
-      try {
-        killProcessGroup(p.pid, "SIGKILL");
-      } catch {
-        // Ignore
-      }
-    }
-
+    this.clearFinished();
     try {
       rmSync(this.logDir, { recursive: true, force: true });
     } catch {

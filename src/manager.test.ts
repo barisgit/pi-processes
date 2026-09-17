@@ -1,3 +1,7 @@
+import { randomUUID } from "node:crypto";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { setImmediate } from "node:timers/promises";
 import { afterEach, describe, expect, it } from "vitest";
 import type { ManagerEvent } from "./constants";
 import { ProcessManager } from "./manager";
@@ -23,8 +27,8 @@ function collectEvents(manager: ProcessManager): ManagerEvent[] {
 describe("process_output_changed", () => {
   let manager: ProcessManager;
 
-  afterEach(() => {
-    manager.cleanup();
+  afterEach(async () => {
+    await manager.cleanup();
   });
 
   it("emits process_output_changed on stdout", async () => {
@@ -199,8 +203,8 @@ describe("process_output_changed", () => {
 describe("process_watch_matched", () => {
   let manager: ProcessManager;
 
-  afterEach(() => {
-    manager.cleanup();
+  afterEach(async () => {
+    await manager.cleanup();
   });
 
   it("fires once by default on first matching line", async () => {
@@ -328,4 +332,32 @@ describe("process_watch_matched", () => {
       }),
     ).toThrowError(/Invalid log watch pattern/);
   });
+});
+
+it("handles a missing working directory without an unhandled spawn error", async () => {
+  const manager = new ProcessManager();
+  const events = collectEvents(manager);
+  try {
+    const info = manager.start(
+      "missing-cwd",
+      "bun run dev",
+      join(tmpdir(), `pi-processes-missing-${randomUUID()}`),
+    );
+    // Spawn errors arrive asynchronously, after start() returns without a PID.
+    await setImmediate();
+    expect(manager.get(info.id)).toMatchObject({
+      status: "exited",
+      success: false,
+      exitCode: -1,
+    });
+    expect(manager.getFullOutput(info.id)?.stderr).toContain("ENOENT");
+    expect(
+      events.filter((event) => event.type === "process_ended"),
+    ).toHaveLength(1);
+    expect(events.some((event) => event.type === "process_started")).toBe(
+      false,
+    );
+  } finally {
+    await manager.cleanup();
+  }
 });
