@@ -1,6 +1,6 @@
 ---
 name: pi-processes
-description: Manage long-running commands in the background with the process tool. Use when a task needs a dev server, test watcher, build watcher, local API, or log tail to keep running while the conversation continues.
+description: "Manage background commands and services with the process tool: start runs, inspect status/output/logs, send stdin, configure completion alerts or log watches, and stop or clear runs. Use for dev servers, APIs, watchers, builds, and log tails that must continue while the conversation progresses."
 ---
 
 # pi-processes
