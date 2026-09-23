@@ -48,6 +48,9 @@
   },
   "devDependencies": {
     "@aliou/biome-plugins": "^0.8.1",
+    "@earendil-works/pi-ai": "0.87.1",
+    "@earendil-works/pi-coding-agent": "0.87.1",
+    "@earendil-works/pi-tui": "0.87.1",
     "@biomejs/biome": "^2.4.15",
     "@changesets/cli": "^2.31.0",
     "@types/node": "^25.9.1",
