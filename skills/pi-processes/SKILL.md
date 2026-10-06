@@ -12,7 +12,7 @@ Use this skill when work needs a long-running command to stay alive while Pi con
 - Use the `process` tool for long-running commands.
 - Avoid shell background patterns when the process tool fits.
 - Give processes stable, clear names.
-- Continue the task after starting a process instead of waiting on it.
+- Continue the task after starting a process instead of waiting on it. A subagent's processes are killed when it returns, so a subagent runs builds, tests, and profiles it must finish as foreground commands.
 - Inspect output or log files only when needed.
 - Kill and clear processes when they are no longer useful.
 

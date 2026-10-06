@@ -120,7 +120,7 @@ export function setupProcessesTools(pi: ExtensionAPI, manager: ProcessManager) {
   pi.registerTool<typeof ProcessesParams, ProcessesDetails>({
     name: "process",
     label: "Process",
-    description: `Manage long-running commands in the background. Start a named command, then list it, inspect recent output or log files, write to stdin, kill it, or clear finished entries. Process status remains visible to the user; alert flags and log watches only control when Pi gives you a follow-up turn. Notifications remove the need to poll.`,
+    description: `Manage long-running commands in the background. Start a named command, then list it, inspect recent output or log files, write to stdin, kill it, or clear finished entries. Process status remains visible to the user; alert flags and log watches only control when Pi gives you a follow-up turn. Notifications remove the need to poll. Processes are killed when the session that started them ends; a subagent's session ends when it returns, so a subagent should run anything it must finish in the foreground.`,
     promptSnippet:
       "Manage background processes without blocking the conversation",
 
