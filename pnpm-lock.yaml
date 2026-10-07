@@ -21,8 +21,8 @@ importers:
         specifier: ^3.3.1
         version: 3.3.1
       pi-extension-utils:
-        specifier: ^0.7.7
-        version: 0.7.7(@earendil-works/pi-agent-core@0.87.1(ws@8.19.0)(zod@3.25.76))(@earendil-works/pi-ai@0.87.1(ws@8.19.0)(zod@3.25.76))(@earendil-works/pi-coding-agent@0.87.1(ws@8.19.0)(zod@3.25.76))(@earendil-works/pi-tui@0.87.1)
+        specifier: ^0.7.9
+        version: 0.7.9(@earendil-works/pi-agent-core@0.87.1(ws@8.19.0)(zod@3.25.76))(@earendil-works/pi-ai@0.87.1(ws@8.19.0)(zod@3.25.76))(@earendil-works/pi-coding-agent@0.87.1(ws@8.19.0)(zod@3.25.76))(@earendil-works/pi-tui@0.87.1)
       typebox:
         specifier: ^1.3.6
         version: 1.3.6
@@ -1417,8 +1417,8 @@ packages:
   pathe@2.0.3:
     resolution: {integrity: sha512-WUjGcAqP1gQacoQe+OBJsFA7Ld4DyXuUIjZ5cc75cLHvJ7dtNsTugphxIADwspS+AraAUePCKrSVtPLFj/F88w==}
 
-  pi-extension-utils@0.7.7:
-    resolution: {integrity: sha512-PSsWaVw26HybZH+mHcro+yOSuC5RjiWWuk8mm+Qpv+diOGfU0GdmeWOBmQtEQx5q9oxJW9lBhjdZNQusOWH4pA==}
+  pi-extension-utils@0.7.9:
+    resolution: {integrity: sha512-Czux9Qr1lC2K34EcG18LzDr4qs1y1epHTFs475ABa9m8e44jjHy/wOp5YAmbIw2AVWyXOY+zjj8iW3cvtTNDZw==}
     peerDependencies:
       '@earendil-works/pi-agent-core': '*'
       '@earendil-works/pi-ai': '*'
@@ -3138,14 +3138,14 @@ snapshots:
 
   pathe@2.0.3: {}
 
-  pi-extension-utils@0.7.7(@earendil-works/pi-agent-core@0.87.1(ws@8.19.0)(zod@3.25.76))(@earendil-works/pi-ai@0.87.1(ws@8.19.0)(zod@3.25.76))(@earendil-works/pi-coding-agent@0.87.1(ws@8.19.0)(zod@3.25.76))(@earendil-works/pi-tui@0.87.1):
+  pi-extension-utils@0.7.9(@earendil-works/pi-agent-core@0.87.1(ws@8.19.0)(zod@3.25.76))(@earendil-works/pi-ai@0.87.1(ws@8.19.0)(zod@3.25.76))(@earendil-works/pi-coding-agent@0.87.1(ws@8.19.0)(zod@3.25.76))(@earendil-works/pi-tui@0.87.1):
     dependencies:
       '@earendil-works/pi-agent-core': 0.87.1(ws@8.19.0)(zod@3.25.76)
       '@earendil-works/pi-ai': 0.87.1(ws@8.19.0)(zod@3.25.76)
       '@earendil-works/pi-coding-agent': 0.87.1(ws@8.19.0)(zod@3.25.76)
       '@earendil-works/pi-tui': 0.87.1
       jsonc-parser: 3.3.1
-      typebox: 1.3.6
+      typebox: 1.3.27
 
   picocolors@1.1.1: {}
 
