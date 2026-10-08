@@ -19,7 +19,14 @@ Run checks:
 ```bash
 pnpm lint
 pnpm typecheck
+pnpm test
 ```
+
+### npm `overrides` for Git installs
+
+`pi install git:...` runs `npm install --omit=dev` in a fresh clone without a `package-lock.json`. npm still resolves devDependencies and their peer sets. With vite 8, the optional peer chain `vite -> @vitejs/devtools -> @vitejs/devtools-vitest -> vitest@*` pulls in the latest vitest major next to the pinned one. npm 11 then crashes with `Cannot read properties of null (reading 'edgesOut')`.
+
+The npm-only `overrides.vite` pins vite to the major in `pnpm-lock.yaml`, which breaks that chain. pnpm ignores this field. Keep it on the locked vite major, and remove it after vitest and vite are upgraded together and a fresh `npm install --omit=dev` passes without it.
 
 ## Repository layout
 
