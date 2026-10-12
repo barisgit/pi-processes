@@ -23,9 +23,6 @@ importers:
       pi-extension-utils:
         specifier: ^0.7.9
         version: 0.7.9(@earendil-works/pi-agent-core@0.87.1(ws@8.19.0)(zod@3.25.76))(@earendil-works/pi-ai@0.87.1(ws@8.19.0)(zod@3.25.76))(@earendil-works/pi-coding-agent@0.87.1(ws@8.19.0)(zod@3.25.76))(@earendil-works/pi-tui@0.87.1)
-      typebox:
-        specifier: ^1.3.6
-        version: 1.3.6
     devDependencies:
       '@aliou/biome-plugins':
         specifier: ^0.8.1
@@ -51,6 +48,9 @@ importers:
       husky:
         specifier: ^9.1.7
         version: 9.1.7
+      typebox:
+        specifier: ^1.3.6
+        version: 1.3.6
       typescript:
         specifier: ^6.0.3
         version: 6.0.3
