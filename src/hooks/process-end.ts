@@ -66,7 +66,7 @@ export function setupProcessEndHook(pi: ExtensionAPI, manager: ProcessManager) {
         display: true,
         details,
       },
-      { triggerTurn: triggerAgentTurn },
+      { triggerTurn: triggerAgentTurn, deliverAs: "followUp" },
     );
   });
 }

@@ -79,7 +79,7 @@ export function setupProcessWatchHook(
         display: true,
         details,
       },
-      { triggerTurn },
+      { triggerTurn, deliverAs: "followUp" },
     );
   });
 }
