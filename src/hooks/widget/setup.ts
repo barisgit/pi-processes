@@ -2,7 +2,7 @@ import type {
   ExtensionAPI,
   ExtensionContext,
 } from "@earendil-works/pi-coding-agent";
-import { connect, type UtilsClient } from "pi-extension-utils";
+import { connect, type UtilsClient } from "pi-extension-utils/pi";
 import { LogDockComponent } from "../../components/log-dock-component";
 import { configLoader, type ResolvedProcessesConfig } from "../../config";
 import { LIVE_STATUSES } from "../../constants";

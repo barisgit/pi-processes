@@ -4,7 +4,7 @@ import {
   truncateToWidth,
   visibleWidth,
 } from "@earendil-works/pi-tui";
-import { type PaneOverlayComponent, paneOverlay } from "pi-extension-utils";
+import { type PaneOverlayComponent, paneOverlay } from "pi-extension-utils/pi";
 import { configLoader } from "../config";
 import type { ProcessInfo } from "../constants";
 import type { ProcessManager } from "../manager";

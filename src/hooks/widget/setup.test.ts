@@ -6,7 +6,7 @@ const utilsMocks = vi.hoisted(() => ({
   connect: vi.fn(),
 }));
 
-vi.mock("pi-extension-utils", () => ({
+vi.mock("pi-extension-utils/pi", () => ({
   connect: utilsMocks.connect,
 }));
 

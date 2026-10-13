@@ -13,7 +13,7 @@ import type {
   ExtensionAPI,
   ExtensionContext,
 } from "@earendil-works/pi-coding-agent";
-import type { UtilsClient } from "pi-extension-utils";
+import type { UtilsClient } from "pi-extension-utils/pi";
 import type { DockActions } from "../hooks/widget";
 import type { ProcessManager } from "../manager";
 import { registerPsClearCommand } from "./clear";

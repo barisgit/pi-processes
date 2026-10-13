@@ -2,7 +2,7 @@ import type {
   ExtensionAPI,
   ExtensionContext,
 } from "@earendil-works/pi-coding-agent";
-import type { UtilsClient } from "pi-extension-utils";
+import type { UtilsClient } from "pi-extension-utils/pi";
 import type { ResolvedProcessesConfig } from "../config";
 import type { ProcessManager } from "../manager";
 import { setupBackgroundBlocker } from "./background-blocker";
