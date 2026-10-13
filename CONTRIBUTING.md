@@ -43,7 +43,6 @@ Import `pi-extension-utils/pi` in Pi-facing source and matching test mocks. This
 - `src/components/` - TUI components
 - `skills/` - shipped package skills
 - `.agents/skills/` - local repo-only skills for development workflows
-- `.github/docs-site/` - isolated docs page build
 
 ## Internal behavior
 
@@ -117,17 +116,9 @@ Use HTML comments in `README.md`:
 <!-- VIDEO: {"id":"process-panel","title":"Browse and manage processes from the panel"} -->
 ```
 
-GitHub ignores these comments. The docs page build turns them into video blocks.
+GitHub ignores these comments. They retain video metadata for external documentation consumers.
 
 Add one placeholder for each feature section.
-
-## Docs page build
-
-The generated docs page lives under `.github/docs-site/` and is isolated from the extension source.
-
-It reads `README.md`, converts markdown into structured content, replaces video placeholders, highlights code with Shiki, and builds a static page with Vite and Tailwind.
-
-The GitHub Actions workflow for this lives in `.github/workflows/docs-page.yml`.
 
 ## Demo pattern
 
