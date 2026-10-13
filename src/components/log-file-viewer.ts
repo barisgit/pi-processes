@@ -10,7 +10,7 @@
 import { readFileSync } from "node:fs";
 import type { Theme } from "@earendil-works/pi-coding-agent";
 import { truncateToWidth, visibleWidth } from "@earendil-works/pi-tui";
-import { stripAnsi } from "../utils";
+import { stripAnsi } from "../utils/index.ts";
 
 export type StreamFilter = "combined" | "stdout" | "stderr";
 export type LineFormat = "plain" | "combined";

@@ -1,5 +1,5 @@
 import type { Theme } from "@earendil-works/pi-coding-agent";
-import type { ProcessInfo } from "../constants";
+import type { ProcessInfo } from "../constants/index.ts";
 
 export function formatRuntime(
   startTime: number,

@@ -1,7 +1,7 @@
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
-import { MESSAGE_TYPE_PROCESS_UPDATE } from "../constants";
-import type { ProcessManager } from "../manager";
-import { safeSendMessage } from "./utils";
+import { MESSAGE_TYPE_PROCESS_UPDATE } from "../constants/index.ts";
+import type { ProcessManager } from "../manager.ts";
+import { safeSendMessage } from "./utils.ts";
 
 interface ProcessWatchUpdateDetails {
   kind: "watch_matched";

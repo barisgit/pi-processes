@@ -1,4 +1,4 @@
-import type { ProcessInfo, ProcessStatus } from "../constants";
+import type { ProcessInfo, ProcessStatus } from "../constants/index.ts";
 
 export function statusLabel(proc: ProcessInfo): string {
   switch (proc.status) {

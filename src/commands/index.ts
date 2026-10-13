@@ -14,14 +14,14 @@ import type {
   ExtensionContext,
 } from "@earendil-works/pi-coding-agent";
 import type { UtilsClient } from "pi-extension-utils/pi";
-import type { DockActions } from "../hooks/widget";
-import type { ProcessManager } from "../manager";
-import { registerPsClearCommand } from "./clear";
-import { registerPsDockCommand } from "./dock";
-import { registerPsKillCommand } from "./kill";
-import { registerPsLogsCommand } from "./logs";
-import { registerPsPinCommand } from "./pin";
-import { registerPsCommand } from "./processes";
+import type { DockActions } from "../hooks/widget/index.ts";
+import type { ProcessManager } from "../manager.ts";
+import { registerPsClearCommand } from "./clear/index.ts";
+import { registerPsDockCommand } from "./dock/index.ts";
+import { registerPsKillCommand } from "./kill/index.ts";
+import { registerPsLogsCommand } from "./logs/index.ts";
+import { registerPsPinCommand } from "./pin/index.ts";
+import { registerPsCommand } from "./processes/index.ts";
 
 export function setupProcessesCommands(
   pi: ExtensionAPI,

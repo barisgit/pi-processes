@@ -1,9 +1,9 @@
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
-import { LIVE_STATUSES } from "../../constants";
-import type { DockActions } from "../../hooks/widget";
-import type { ProcessManager } from "../../manager";
-import { runningProcessCompletions } from "../completions";
-import { pickProcess } from "../pick-process";
+import { LIVE_STATUSES } from "../../constants/index.ts";
+import type { DockActions } from "../../hooks/widget/index.ts";
+import type { ProcessManager } from "../../manager.ts";
+import { runningProcessCompletions } from "../completions.ts";
+import { pickProcess } from "../pick-process.ts";
 
 export function registerPsKillCommand(
   pi: ExtensionAPI,

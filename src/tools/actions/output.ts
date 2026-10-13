@@ -5,10 +5,10 @@ import type {
   ToolRenderResultOptions,
 } from "@earendil-works/pi-coding-agent";
 import { Text } from "@earendil-works/pi-tui";
-import { configLoader } from "../../config";
-import type { ExecuteResult, ProcessesDetails } from "../../constants";
-import type { ProcessManager } from "../../manager";
-import { formatStatus, hasAnsi, stripAnsi } from "../../utils";
+import { configLoader } from "../../config.ts";
+import type { ExecuteResult, ProcessesDetails } from "../../constants/index.ts";
+import type { ProcessManager } from "../../manager.ts";
+import { formatStatus, hasAnsi, stripAnsi } from "../../utils/index.ts";
 
 const MAX_BYTES = 50 * 1024; // 50KB
 

@@ -3,7 +3,7 @@ import type * as FileSystem from "node:fs";
 import { existsSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { expect, it, vi } from "vitest";
-import { ProcessManager } from "./manager";
+import { ProcessManager } from "./manager.ts";
 
 vi.mock("node:child_process", async (importOriginal) => {
   const actual = await importOriginal<typeof import("node:child_process")>();

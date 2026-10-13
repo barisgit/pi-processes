@@ -5,9 +5,9 @@ import type {
 } from "@earendil-works/pi-coding-agent";
 import type { TUI } from "@earendil-works/pi-tui";
 import type { UtilsClient } from "pi-extension-utils/pi";
-import { ProcessesComponent } from "../../components/processes-component";
-import type { DockActions } from "../../hooks/widget";
-import type { ProcessManager } from "../../manager";
+import { ProcessesComponent } from "../../components/processes-component.ts";
+import type { DockActions } from "../../hooks/widget/index.ts";
+import type { ProcessManager } from "../../manager.ts";
 
 export function registerPsCommand(
   pi: ExtensionAPI,

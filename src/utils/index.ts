@@ -1,9 +1,9 @@
-export { hasAnsi, stripAnsi } from "./ansi";
+export { hasAnsi, stripAnsi } from "./ansi.ts";
 export {
   formatRuntime,
   formatStatus,
   formatStatusTag,
   formatTimestamp,
   truncateCmd,
-} from "./format";
-export { isProcessGroupAlive, killProcessGroup } from "./process-group";
+} from "./format.ts";
+export { isProcessGroupAlive, killProcessGroup } from "./process-group.ts";

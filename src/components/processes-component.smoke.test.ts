@@ -1,7 +1,7 @@
 import { beforeAll, describe, expect, it, vi } from "vitest";
-import { configLoader } from "../config";
-import { stripAnsi } from "../utils";
-import { ProcessesComponent } from "./processes-component";
+import { configLoader } from "../config.ts";
+import { stripAnsi } from "../utils/index.ts";
+import { ProcessesComponent } from "./processes-component.ts";
 
 const now = Date.now();
 

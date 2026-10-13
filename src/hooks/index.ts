@@ -3,14 +3,14 @@ import type {
   ExtensionContext,
 } from "@earendil-works/pi-coding-agent";
 import type { UtilsClient } from "pi-extension-utils/pi";
-import type { ResolvedProcessesConfig } from "../config";
-import type { ProcessManager } from "../manager";
-import { setupBackgroundBlocker } from "./background-blocker";
-import { setupCleanupHook } from "./cleanup";
-import { setupMessageRenderer } from "./message-renderer";
-import { setupProcessEndHook } from "./process-end";
-import { setupProcessWatchHook } from "./process-watch";
-import { type DockActions, setupProcessWidget } from "./widget";
+import type { ResolvedProcessesConfig } from "../config.ts";
+import type { ProcessManager } from "../manager.ts";
+import { setupBackgroundBlocker } from "./background-blocker.ts";
+import { setupCleanupHook } from "./cleanup.ts";
+import { setupMessageRenderer } from "./message-renderer.ts";
+import { setupProcessEndHook } from "./process-end.ts";
+import { setupProcessWatchHook } from "./process-watch.ts";
+import { type DockActions, setupProcessWidget } from "./widget/index.ts";
 
 export type { DockActions };
 

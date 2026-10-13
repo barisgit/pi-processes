@@ -3,7 +3,7 @@ import { readFileSync, statSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname } from "node:path";
 import { afterEach, expect, it } from "vitest";
-import { ProcessManager } from "./manager";
+import { ProcessManager } from "./manager.ts";
 
 const managers: ProcessManager[] = [];
 afterEach(async () => {

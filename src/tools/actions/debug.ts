@@ -1,6 +1,6 @@
 import { ToolCallHeader } from "@aliou/pi-utils-ui";
 import type { Theme } from "@earendil-works/pi-coding-agent";
-import type { ExecuteResult, ProcessInfo } from "../../constants";
+import type { ExecuteResult, ProcessInfo } from "../../constants/index.ts";
 
 interface DebugParams {
   preview?: "start" | "list" | "output" | "logs" | "error";

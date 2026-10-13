@@ -5,15 +5,15 @@ import type {
   ToolRenderResultOptions,
 } from "@earendil-works/pi-coding-agent";
 import { Text } from "@earendil-works/pi-tui";
-import type { ExecuteResult, ProcessesDetails } from "../../constants";
-import type { ProcessManager } from "../../manager";
+import type { ExecuteResult, ProcessesDetails } from "../../constants/index.ts";
+import type { ProcessManager } from "../../manager.ts";
 import {
   formatRuntime,
   formatStatus,
   formatStatusTag,
   formatTimestamp,
   truncateCmd,
-} from "../../utils";
+} from "../../utils/index.ts";
 
 export function executeList(manager: ProcessManager): ExecuteResult {
   const processes = manager.list();

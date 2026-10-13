@@ -8,10 +8,10 @@
 import type { Theme, ThemeColor } from "@earendil-works/pi-coding-agent";
 import type { Component } from "@earendil-works/pi-tui";
 import { truncateToWidth, visibleWidth } from "@earendil-works/pi-tui";
-import { LIVE_STATUSES } from "../constants";
-import type { ProcessManager } from "../manager";
-import { formatRuntime, formatStatus, stripAnsi } from "../utils";
-import { LogFileViewer } from "./log-file-viewer";
+import { LIVE_STATUSES } from "../constants/index.ts";
+import type { ProcessManager } from "../manager.ts";
+import { formatRuntime, formatStatus, stripAnsi } from "../utils/index.ts";
+import { LogFileViewer } from "./log-file-viewer.ts";
 
 const PROCESS_COLORS: ThemeColor[] = [
   "accent",

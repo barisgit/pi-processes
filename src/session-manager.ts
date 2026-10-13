@@ -2,8 +2,8 @@ import type {
   ExtensionAPI,
   ExtensionContext,
 } from "@earendil-works/pi-coding-agent";
-import type { ManagerEvent } from "./constants";
-import { ProcessManager } from "./manager";
+import type { ManagerEvent } from "./constants/index.ts";
+import { ProcessManager } from "./manager.ts";
 
 // SessionManager object identity isolates SDK children, including sessions opened
 // from the same file. The session ID separates new/resume/fork on that host.

@@ -1,8 +1,11 @@
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
-import { MESSAGE_TYPE_PROCESS_UPDATE, type ProcessInfo } from "../constants";
-import type { ProcessManager } from "../manager";
-import { formatRuntime } from "../utils";
-import { safeSendMessage } from "./utils";
+import {
+  MESSAGE_TYPE_PROCESS_UPDATE,
+  type ProcessInfo,
+} from "../constants/index.ts";
+import type { ProcessManager } from "../manager.ts";
+import { formatRuntime } from "../utils/index.ts";
+import { safeSendMessage } from "./utils.ts";
 
 interface ProcessUpdateDetails {
   kind: "lifecycle";

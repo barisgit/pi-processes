@@ -13,8 +13,8 @@ import { expect, it, vi } from "vitest";
 import {
   MESSAGE_TYPE_PROCESS_UPDATE,
   type ProcessesDetails,
-} from "./constants";
-import extension from "./index";
+} from "./constants/index.ts";
+import extension from "./index.ts";
 
 async function execute(session: AgentSession, params: Record<string, unknown>) {
   const runner = session.extensionRunner;

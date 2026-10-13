@@ -1,5 +1,5 @@
-import type { ExecuteResult } from "../../constants";
-import type { ProcessManager } from "../../manager";
+import type { ExecuteResult } from "../../constants/index.ts";
+import type { ProcessManager } from "../../manager.ts";
 
 export function executeClear(manager: ProcessManager): ExecuteResult {
   const cleared = manager.clearFinished();

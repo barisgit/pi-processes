@@ -30,6 +30,8 @@ The npm-only `overrides.vite` pins vite to the major in `pnpm-lock.yaml`, which 
 
 ### Pi runtime imports
 
+Use exact `.ts` paths for relative imports and re-exports, including directory `index.ts` files and test mocks. Pi loads TypeScript source through jiti; explicit filenames avoid extension probing during startup. Typechecking uses `noEmit` with `allowImportingTsExtensions`.
+
 Import `pi-extension-utils/pi` in Pi-facing source and matching test mocks. This entry keeps host package imports inside Pi's loader, which aliases them to the running host. The default compiled entry can load a separate coding-agent dependency graph through native Node resolution and slows startup. The `/pi` entry requires the published `pi-extension-utils` 0.7.10 or newer; keep `package.json` and `pnpm-lock.yaml` aligned.
 
 ## Repository layout

@@ -5,12 +5,12 @@ import {
   visibleWidth,
 } from "@earendil-works/pi-tui";
 import { type PaneOverlayComponent, paneOverlay } from "pi-extension-utils/pi";
-import { configLoader } from "../config";
-import type { ProcessInfo } from "../constants";
-import type { ProcessManager } from "../manager";
-import { stripAnsi } from "../utils";
-import { flatRule, formatPath } from "./render-helpers";
-import { statusIcon, statusLabel } from "./status-format";
+import { configLoader } from "../config.ts";
+import type { ProcessInfo } from "../constants/index.ts";
+import type { ProcessManager } from "../manager.ts";
+import { stripAnsi } from "../utils/index.ts";
+import { flatRule, formatPath } from "./render-helpers.ts";
+import { statusIcon, statusLabel } from "./status-format.ts";
 
 const MIN_LEFT_PANE = 30;
 const MIN_RIGHT_PANE = 36;

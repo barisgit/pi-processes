@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { stripAnsi } from "./ansi";
+import { stripAnsi } from "./ansi.ts";
 
 describe("stripAnsi", () => {
   it("strips CSI styling sequences", () => {

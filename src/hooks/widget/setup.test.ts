@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { ResolvedProcessesConfig } from "../../config";
-import { setupProcessWidget } from "./setup";
+import type { ResolvedProcessesConfig } from "../../config.ts";
+import { setupProcessWidget } from "./setup.ts";
 
 const utilsMocks = vi.hoisted(() => ({
   connect: vi.fn(),
@@ -10,8 +10,8 @@ vi.mock("pi-extension-utils/pi", () => ({
   connect: utilsMocks.connect,
 }));
 
-vi.mock("../../config", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("../../config")>()),
+vi.mock("../../config.ts", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("../../config.ts")>()),
   configLoader: {
     getConfig: () => ({ widget: { showStatusWidget: false } }),
   },

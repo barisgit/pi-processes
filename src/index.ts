@@ -1,10 +1,10 @@
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
-import { setupProcessesCommands } from "./commands";
-import { registerProcessesSettings } from "./commands/settings";
-import { configLoader } from "./config";
-import { setupProcessesHooks } from "./hooks";
-import { bindSessionManager } from "./session-manager";
-import { setupProcessesTools } from "./tools";
+import { setupProcessesCommands } from "./commands/index.ts";
+import { registerProcessesSettings } from "./commands/settings/index.ts";
+import { configLoader } from "./config.ts";
+import { setupProcessesHooks } from "./hooks/index.ts";
+import { bindSessionManager } from "./session-manager.ts";
+import { setupProcessesTools } from "./tools/index.ts";
 
 export default async function (pi: ExtensionAPI) {
   if (process.platform === "win32") {

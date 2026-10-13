@@ -1,1 +1,1 @@
-export { registerPsPinCommand } from "./command";
+export { registerPsPinCommand } from "./command.ts";

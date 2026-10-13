@@ -23,10 +23,10 @@ import {
   truncateToWidth,
   visibleWidth,
 } from "@earendil-works/pi-tui";
-import { LIVE_STATUSES, type ProcessInfo } from "../constants";
-import type { ProcessManager } from "../manager";
-import { LogFileViewer } from "./log-file-viewer";
-import { statusIcon } from "./status-format";
+import { LIVE_STATUSES, type ProcessInfo } from "../constants/index.ts";
+import type { ProcessManager } from "../manager.ts";
+import { LogFileViewer } from "./log-file-viewer.ts";
+import { statusIcon } from "./status-format.ts";
 
 // Lines that aren't log content: top border + tabs + divider + divider + status + footer + bottom border
 const CHROME_LINES = 7;

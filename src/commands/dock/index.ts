@@ -1,1 +1,1 @@
-export { registerPsDockCommand } from "./command";
+export { registerPsDockCommand } from "./command.ts";

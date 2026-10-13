@@ -1,7 +1,7 @@
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
-import { LogOverlayComponent } from "../../components/log-overlay-component";
-import type { ProcessManager } from "../../manager";
-import { allProcessCompletions } from "../completions";
+import { LogOverlayComponent } from "../../components/log-overlay-component.ts";
+import type { ProcessManager } from "../../manager.ts";
+import { allProcessCompletions } from "../completions.ts";
 
 export function registerPsLogsCommand(
   pi: ExtensionAPI,

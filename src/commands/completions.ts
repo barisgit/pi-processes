@@ -1,4 +1,4 @@
-import type { ProcessManager } from "../manager";
+import type { ProcessManager } from "../manager.ts";
 
 export function runningProcessCompletions(manager: ProcessManager) {
   return (prefix: string) => {

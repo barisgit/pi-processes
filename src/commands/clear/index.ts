@@ -1,1 +1,1 @@
-export { registerPsClearCommand } from "./command";
+export { registerPsClearCommand } from "./command.ts";

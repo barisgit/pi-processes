@@ -1,7 +1,7 @@
 import type { ExtensionCommandContext } from "@earendil-works/pi-coding-agent";
-import { ProcessPickerComponent } from "../components/process-picker-component";
-import type { ProcessInfo } from "../constants";
-import type { ProcessManager } from "../manager";
+import { ProcessPickerComponent } from "../components/process-picker-component.ts";
+import type { ProcessInfo } from "../constants/index.ts";
+import type { ProcessManager } from "../manager.ts";
 
 export async function pickProcess(
   ctx: ExtensionCommandContext,

@@ -8,9 +8,13 @@ import type {
 } from "@earendil-works/pi-coding-agent";
 import { Text } from "@earendil-works/pi-tui";
 import { type Static, Type } from "typebox";
-import type { ProcessesDetails } from "../constants";
-import type { ProcessManager } from "../manager";
-import { executeAction, renderActionCall, renderActionResult } from "./actions";
+import type { ProcessesDetails } from "../constants/index.ts";
+import type { ProcessManager } from "../manager.ts";
+import {
+  executeAction,
+  renderActionCall,
+  renderActionResult,
+} from "./actions/index.ts";
 
 const DEBUG_PREVIEW_ENABLED = process.env.PI_PROCESSES_DEBUG_PREVIEW === "1";
 

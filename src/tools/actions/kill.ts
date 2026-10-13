@@ -1,7 +1,7 @@
 import { ToolCallHeader } from "@aliou/pi-utils-ui";
 import type { Theme } from "@earendil-works/pi-coding-agent";
-import type { ExecuteResult } from "../../constants";
-import type { ProcessManager } from "../../manager";
+import type { ExecuteResult } from "../../constants/index.ts";
+import type { ProcessManager } from "../../manager.ts";
 
 interface KillParams {
   id?: string;

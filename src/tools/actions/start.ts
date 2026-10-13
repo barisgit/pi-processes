@@ -6,8 +6,8 @@ import type {
   ToolRenderResultOptions,
 } from "@earendil-works/pi-coding-agent";
 import { Text } from "@earendil-works/pi-tui";
-import type { ExecuteResult, ProcessesDetails } from "../../constants";
-import type { ProcessManager } from "../../manager";
+import type { ExecuteResult, ProcessesDetails } from "../../constants/index.ts";
+import type { ProcessManager } from "../../manager.ts";
 
 type WatchStream = "stdout" | "stderr" | "both";
 

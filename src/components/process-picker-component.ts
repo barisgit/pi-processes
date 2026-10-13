@@ -5,14 +5,14 @@ import {
   truncateToWidth,
   visibleWidth,
 } from "@earendil-works/pi-tui";
-import type { ProcessInfo } from "../constants";
-import type { ProcessManager } from "../manager";
+import type { ProcessInfo } from "../constants/index.ts";
+import type { ProcessManager } from "../manager.ts";
 import {
   createPanelPadder,
   renderPanelRule,
   renderPanelTitleLine,
-} from "./panel-helpers";
-import { statusIcon, statusLabel } from "./status-format";
+} from "./panel-helpers.ts";
+import { statusIcon, statusLabel } from "./status-format.ts";
 
 /**
  * A simple process picker component. Shows a list of processes and lets the

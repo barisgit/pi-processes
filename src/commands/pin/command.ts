@@ -1,8 +1,8 @@
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
-import type { DockActions } from "../../hooks/widget";
-import type { ProcessManager } from "../../manager";
-import { allProcessCompletions } from "../completions";
-import { pickProcess } from "../pick-process";
+import type { DockActions } from "../../hooks/widget/index.ts";
+import type { ProcessManager } from "../../manager.ts";
+import { allProcessCompletions } from "../completions.ts";
+import { pickProcess } from "../pick-process.ts";
 
 export function registerPsPinCommand(
   pi: ExtensionAPI,

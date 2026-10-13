@@ -10,7 +10,7 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
 import { expect, it } from "vitest";
-import { ProcessManager } from "./manager";
+import { ProcessManager } from "./manager.ts";
 
 const fixture = resolve("src/test/owned-workload.mjs");
 const roles = ["root", "same-group", "detached", "nested"];

@@ -1,6 +1,6 @@
 import { visibleWidth } from "@earendil-works/pi-tui";
 import { describe, expect, it } from "vitest";
-import { renderCollapsedDockLine } from "./log-dock-component";
+import { renderCollapsedDockLine } from "./log-dock-component.ts";
 
 const LONG_LOG_LINE =
   "build-step - 3f7a9c2 pending ↻ https://example.com/pipelines/project/service/123456/workflows/abcdef12-3456-7890-abcd-ef1234567890/jobs/integration-test?token=very-long-unbroken-log-segment-and-query-string";

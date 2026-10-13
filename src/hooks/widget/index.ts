@@ -1,2 +1,2 @@
-export { setupProcessWidget } from "./setup";
-export type { DockActions } from "./types";
+export { setupProcessWidget } from "./setup.ts";
+export type { DockActions } from "./types.ts";

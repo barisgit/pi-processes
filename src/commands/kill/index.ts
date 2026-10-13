@@ -1,1 +1,1 @@
-export { registerPsKillCommand } from "./command";
+export { registerPsKillCommand } from "./command.ts";

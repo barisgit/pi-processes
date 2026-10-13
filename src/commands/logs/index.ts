@@ -1,1 +1,1 @@
-export { registerPsLogsCommand } from "./command";
+export { registerPsLogsCommand } from "./command.ts";

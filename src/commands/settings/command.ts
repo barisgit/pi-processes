@@ -1,9 +1,9 @@
 import { registerSettingsCommand } from "@aliou/pi-utils-settings";
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
-import type { ProcessesConfig, ResolvedProcessesConfig } from "../../config";
-import { configLoader } from "../../config";
-import { applySettingChange } from "./apply-setting-change";
-import { buildSettingsSections } from "./build-sections";
+import type { ProcessesConfig, ResolvedProcessesConfig } from "../../config.ts";
+import { configLoader } from "../../config.ts";
+import { applySettingChange } from "./apply-setting-change.ts";
+import { buildSettingsSections } from "./build-sections.ts";
 
 export function registerProcessesSettings(
   pi: ExtensionAPI,

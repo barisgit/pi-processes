@@ -3,7 +3,7 @@ import { spawn } from "node:child_process";
 import type * as nodeFs from "node:fs";
 import { existsSync } from "node:fs";
 import { describe, expect, it, vi } from "vitest";
-import { resolveShellExecutable, spawnCommand } from "./command-executor";
+import { resolveShellExecutable, spawnCommand } from "./command-executor.ts";
 
 vi.mock("node:child_process", () => ({ spawn: vi.fn() }));
 

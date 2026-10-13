@@ -21,10 +21,13 @@ import {
   type ProcessStatus,
   type StartOptions,
   type WriteResult,
-} from "./constants";
-import { spawnCommand } from "./utils/command-executor";
-import { LogLines } from "./utils/log-lines";
-import { inspectProcesses, ProcessOwnership } from "./utils/process-ownership";
+} from "./constants/index.ts";
+import { spawnCommand } from "./utils/command-executor.ts";
+import { LogLines } from "./utils/log-lines.ts";
+import {
+  inspectProcesses,
+  ProcessOwnership,
+} from "./utils/process-ownership.ts";
 
 interface ResolvedWatch {
   index: number;

@@ -1,6 +1,6 @@
 import type { Component } from "@earendil-works/pi-tui";
 import { describe, expect, it } from "vitest";
-import { setupMessageRenderer } from "./message-renderer";
+import { setupMessageRenderer } from "./message-renderer.ts";
 
 const theme = { fg: (_color: string, text: string) => text };
 const lifecycle = {

@@ -1,4 +1,4 @@
-import type { ProcessesConfig } from "../../config";
+import type { ProcessesConfig } from "../../config.ts";
 
 export function applySettingChange(
   id: string,

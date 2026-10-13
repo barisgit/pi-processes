@@ -1,6 +1,6 @@
 import type { ExtensionContext } from "@earendil-works/pi-coding-agent";
 import { truncateToWidth, visibleWidth } from "@earendil-works/pi-tui";
-import type { ProcessInfo } from "../../constants";
+import type { ProcessInfo } from "../../constants/index.ts";
 
 function formatProcessStatus(
   proc: ProcessInfo,

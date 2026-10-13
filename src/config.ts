@@ -6,8 +6,8 @@
  */
 
 import { ConfigLoader } from "@aliou/pi-utils-settings";
-import type { ProcessesKeybindings } from "./utils/keybindings";
-import { DEFAULT_KEYBINDINGS } from "./utils/keybindings";
+import type { ProcessesKeybindings } from "./utils/keybindings.ts";
+import { DEFAULT_KEYBINDINGS } from "./utils/keybindings.ts";
 
 export interface ProcessesConfig {
   processList?: {

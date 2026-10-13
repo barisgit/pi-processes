@@ -3,8 +3,8 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { setImmediate } from "node:timers/promises";
 import { afterEach, describe, expect, it } from "vitest";
-import type { ManagerEvent } from "./constants";
-import { ProcessManager } from "./manager";
+import type { ManagerEvent } from "./constants/index.ts";
+import { ProcessManager } from "./manager.ts";
 
 function waitForEnd(manager: ProcessManager, id: string): Promise<void> {
   return new Promise((resolve) => {

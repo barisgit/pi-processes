@@ -4,7 +4,7 @@ import type {
   Theme,
 } from "@earendil-works/pi-coding-agent";
 import { Text } from "@earendil-works/pi-tui";
-import { MESSAGE_TYPE_PROCESS_UPDATE } from "../constants";
+import { MESSAGE_TYPE_PROCESS_UPDATE } from "../constants/index.ts";
 
 interface ProcessLifecycleDetails {
   kind?: "lifecycle";

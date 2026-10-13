@@ -1,1 +1,1 @@
-export { registerProcessesSettings } from "./command";
+export { registerProcessesSettings } from "./command.ts";

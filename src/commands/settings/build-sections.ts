@@ -1,5 +1,5 @@
 import type { SettingsSection } from "@aliou/pi-utils-settings";
-import type { ProcessesConfig, ResolvedProcessesConfig } from "../../config";
+import type { ProcessesConfig, ResolvedProcessesConfig } from "../../config.ts";
 
 export function buildSettingsSections(
   tabConfig: ProcessesConfig | null,

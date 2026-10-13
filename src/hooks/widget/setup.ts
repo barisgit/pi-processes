@@ -3,17 +3,17 @@ import type {
   ExtensionContext,
 } from "@earendil-works/pi-coding-agent";
 import { connect, type UtilsClient } from "pi-extension-utils/pi";
-import { LogDockComponent } from "../../components/log-dock-component";
-import { configLoader, type ResolvedProcessesConfig } from "../../config";
-import { LIVE_STATUSES } from "../../constants";
-import type { ProcessManager } from "../../manager";
-import { renderStatusWidget } from "./status-widget";
+import { LogDockComponent } from "../../components/log-dock-component.ts";
+import { configLoader, type ResolvedProcessesConfig } from "../../config.ts";
+import { LIVE_STATUSES } from "../../constants/index.ts";
+import type { ProcessManager } from "../../manager.ts";
+import { renderStatusWidget } from "./status-widget.ts";
 import {
   type DockActions,
   type DockState,
   LOG_DOCK_WIDGET_ID,
   STATUS_WIDGET_ID,
-} from "./types";
+} from "./types.ts";
 
 export function setupProcessWidget(
   pi: ExtensionAPI,

@@ -11,6 +11,6 @@ export type {
   ProcessStatus,
   StartOptions,
   WriteResult,
-} from "./types";
+} from "./types.ts";
 
-export { LIVE_STATUSES, MESSAGE_TYPE_PROCESS_UPDATE } from "./types";
+export { LIVE_STATUSES, MESSAGE_TYPE_PROCESS_UPDATE } from "./types.ts";
