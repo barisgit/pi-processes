@@ -25,7 +25,7 @@ async function execute(session: AgentSession, params: Record<string, unknown>) {
     params,
     undefined,
     undefined,
-    runner.createContext(),
+    runner.createToolContext("fixture", undefined),
   );
   return result.details as ProcessesDetails;
 }
